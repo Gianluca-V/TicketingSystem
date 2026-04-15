@@ -1,0 +1,13 @@
+**/bin/
+**/obj/
+**/.git
+*.md
+docker-compose*.yml
+.dockerignore
+.gitignore
+.vs/
+*.suo
+*.user
+*.userprefs
+*.log
+frontend/

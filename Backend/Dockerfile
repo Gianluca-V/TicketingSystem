@@ -5,13 +5,17 @@ ENV ASPNETCORE_URLS=http://+:8080
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
-COPY ["TicketingSystem.Api/TicketingSystem.Api.csproj", "TicketingSystem.Api/"]
-COPY ["TicketingSystem.Application/TicketingSystem.Application.csproj", "TicketingSystem.Application/"]
-COPY ["TicketingSystem.Infrastructure/TicketingSystem.Infrastructure.csproj", "TicketingSystem.Infrastructure/"]
-COPY ["TicketingSystem.Domain/TicketingSystem.Domain.csproj", "TicketingSystem.Domain/"]
-RUN dotnet restore "TicketingSystem.Api/TicketingSystem.Api.csproj"
+
+COPY ["Backend/TicketingSystem.Api/TicketingSystem.Api.csproj", "Backend/TicketingSystem.Api/"]
+COPY ["Backend/TicketingSystem.Application/TicketingSystem.Application.csproj", "Backend/TicketingSystem.Application/"]
+COPY ["Backend/TicketingSystem.Infrastructure/TicketingSystem.Infrastructure.csproj", "Backend/TicketingSystem.Infrastructure/"]
+COPY ["Backend/TicketingSystem.Domain/TicketingSystem.Domain.csproj", "Backend/TicketingSystem.Domain/"]
+
+RUN dotnet restore "Backend/TicketingSystem.Api/TicketingSystem.Api.csproj"
+
 COPY . .
-WORKDIR "/src/TicketingSystem.Api"
+
+WORKDIR "/src/Backend/TicketingSystem.Api"
 RUN dotnet build "TicketingSystem.Api.csproj" -c Release -o /app/build
 
 FROM build AS publish

@@ -1,6 +1,6 @@
 using TicketingSystem.Domain.Entities;
 
-namespace TicketingSystem.Domain.Interfaces;
+namespace TicketingSystem.Application.Interfaces.persistence;
 
 public interface IReservationRepository
 {

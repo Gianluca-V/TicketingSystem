@@ -1,8 +1,8 @@
 using TicketingSystem.Application.DTOs;
-using TicketingSystem.Application.Services;
+using TicketingSystem.Application.Interfaces.persistence;
+using TicketingSystem.Application.Interfaces.Services;
 using TicketingSystem.Domain.Entities;
 using TicketingSystem.Domain.Exceptions;
-using TicketingSystem.Domain.Interfaces;
 
 namespace TicketingSystem.Infrastructure.Services;
 

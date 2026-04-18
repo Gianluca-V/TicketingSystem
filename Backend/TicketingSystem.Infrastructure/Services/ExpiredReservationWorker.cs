@@ -1,8 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using TicketingSystem.Application.Interfaces.persistence;
 using TicketingSystem.Domain.Entities;
-using TicketingSystem.Domain.Interfaces;
 using TicketingSystem.Infrastructure.Data;
 
 namespace TicketingSystem.Infrastructure.Services;

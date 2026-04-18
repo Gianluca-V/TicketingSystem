@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using TicketingSystem.Application.Interfaces.persistence;
 using TicketingSystem.Domain.Entities;
-using TicketingSystem.Domain.Interfaces;
 
 namespace TicketingSystem.Infrastructure.Data;
 
@@ -23,14 +23,10 @@ public class ApplicationDbContext : DbContext, IUnitOfWork
     {
         base.OnModelCreating(modelBuilder);
 
-        // Configure RowVersion for optimistic locking
-        // PostgreSQL doesn't have native RowVersion, so we use a regular byte array
-        // and rely on EF Core's concurrency token mechanism
         modelBuilder.Entity<Seat>()
-            .Property(s => s.RowVersion)
-            .HasColumnName("RowVersion")
-            .HasColumnType("bytea")
-            .IsConcurrencyToken();
+            .Property(e => e.Version)
+            .HasColumnName("xmin")
+            .IsRowVersion();
 
         // Unique constraint for sector + seat number
         modelBuilder.Entity<Seat>()

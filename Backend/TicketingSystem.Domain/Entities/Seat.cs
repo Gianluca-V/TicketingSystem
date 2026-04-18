@@ -9,10 +9,7 @@ public class Seat
     public required Sector Sector { get; set; }
     public required string SeatNumber { get; set; }
     public decimal Price { get; set; }
-    public SeatStatus Status { get; set; } = SeatStatus.Available;
-    
-    [Timestamp]
-    public byte[] RowVersion { get; set; } = new byte[8];
-    
+    public SeatStatus Status { get; set; } = SeatStatus.Available;  
+    public uint Version { get; set; }
     public ICollection<Reservation> Reservations { get; set; } = new List<Reservation>();
 }

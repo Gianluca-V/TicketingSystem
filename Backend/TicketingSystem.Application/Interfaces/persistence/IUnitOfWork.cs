@@ -1,4 +1,4 @@
-namespace TicketingSystem.Domain.Interfaces;
+namespace TicketingSystem.Application.Interfaces.persistence;
 
 public interface IUnitOfWork
 {

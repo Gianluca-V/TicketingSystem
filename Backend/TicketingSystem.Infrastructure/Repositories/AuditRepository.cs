@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using TicketingSystem.Application.Interfaces.persistence;
 using TicketingSystem.Domain.Entities;
-using TicketingSystem.Domain.Interfaces;
 using TicketingSystem.Infrastructure.Data;
 
 namespace TicketingSystem.Infrastructure.Repositories;

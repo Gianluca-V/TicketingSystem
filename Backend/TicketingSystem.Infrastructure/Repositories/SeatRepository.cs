@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using TicketingSystem.Application.Interfaces.persistence;
 using TicketingSystem.Domain.Entities;
-using TicketingSystem.Domain.Interfaces;
 using TicketingSystem.Infrastructure.Data;
 
 namespace TicketingSystem.Infrastructure.Repositories;
@@ -14,11 +14,26 @@ public class SeatRepository : ISeatRepository
         _context = context;
     }
 
+    public async Task<IEnumerable<Seat>> GetAll(CancellationToken cancellationToken = default)
+    {
+        return await _context.Seats
+            .Include(s => s.Sector)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<Seat?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         return await _context.Seats
             .Include(s => s.Sector)
             .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+    }
+
+    public async Task<IEnumerable<Seat>> GetBySectorAsync(int sectorId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Seats
+            .Include(s => s.Sector)
+            .Where(s => s.SectorId == sectorId)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task AddAsync(Seat seat, CancellationToken cancellationToken = default)

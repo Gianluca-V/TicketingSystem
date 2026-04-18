@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using TicketingSystem.Application.Services;
-using TicketingSystem.Domain.Interfaces;
+using TicketingSystem.Application.Interfaces.persistence;
+using TicketingSystem.Application.Interfaces.Services;
 using TicketingSystem.Infrastructure.Data;
 using TicketingSystem.Infrastructure.Repositories;
 using TicketingSystem.Infrastructure.Services;
@@ -25,12 +25,12 @@ public static class DependencyInjection
         services.AddScoped<IAuditRepository, AuditRepository>();
 
         // Register CQRS Query Services
-        services.AddScoped<IEventQueryService, EventQueryService>();
-        services.AddScoped<ISeatQueryService, SeatQueryService>();
+        //services.AddScoped<IEventQueryService, EventQueryService>();
+       // services.AddScoped<ISeatQueryService, SeatQueryService>();
 
         // Register CQRS Command Services
-        services.AddScoped<IReservationCommandService, ReservationCommandService>();
-        services.AddScoped<IPaymentCommandService, PaymentCommandService>();
+       // services.AddScoped<IReservationCommandService, ReservationCommandService>();
+        //services.AddScoped<IPaymentCommandService, PaymentCommandService>();
 
         // Register Background Worker
         services.AddHostedService<ExpiredReservationWorker>();

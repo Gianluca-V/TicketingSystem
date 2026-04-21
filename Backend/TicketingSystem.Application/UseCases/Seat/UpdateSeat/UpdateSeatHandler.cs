@@ -36,9 +36,9 @@ public class UpdateSeatHandler : ICommandHandler<UpdateSeatCommand>
             {
                 Action = AuditAction.Updated,
                 ResourceType = "Seat",
-                ResourceId = seat.Id,
+                ResourceId = seat.Id.ToString(),
                 Details = $"Seat {seat.Id} updated",
-                UserId = ""
+                UserId = 0
             }, ct);
 
             await _uow.CommitTransactionAsync(ct);

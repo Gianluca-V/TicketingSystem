@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
+using TicketingSystem.Application.DTOs;
 using TicketingSystem.Application.Interfaces.Services;
+using TicketingSystem.Application.UseCases.Event.GetEvents;
+using TicketingSystem.Application.UseCases.Seat.GetSeats;
 
 namespace TicketingSystem.Api.Controllers;
 
@@ -7,17 +10,17 @@ namespace TicketingSystem.Api.Controllers;
 [Route("api/v1/[controller]")]
 public class EventsController : ControllerBase
 {
-    //private readonly IEventQueryService _eventQueryService;
-    //private readonly ISeatQueryService _seatQueryService;
+    private readonly IQueryHandler<GetEventsQuery, IEnumerable<EventDto>> _getEventsHandler;
+    private readonly IQueryHandler<GetSeatsQuery, IEnumerable<SeatDto>> _getSeatsHandler;
     private readonly ILogger<EventsController> _logger;
 
     public EventsController(
-        IEventQueryService eventQueryService,
-        ISeatQueryService seatQueryService,
+        IQueryHandler<GetEventsQuery, IEnumerable<EventDto>> getEventsHandler,
+        IQueryHandler<GetSeatsQuery, IEnumerable<SeatDto>> getSeatsHandler,
         ILogger<EventsController> logger)
     {
-        //_eventQueryService = eventQueryService;
-        //_seatQueryService = seatQueryService;
+        _getEventsHandler = getEventsHandler;
+        _getSeatsHandler = getSeatsHandler;
         _logger = logger;
     }
 
@@ -28,9 +31,8 @@ public class EventsController : ControllerBase
     [ProducesResponseType(typeof(IEnumerable<Application.DTOs.EventDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetEvents(CancellationToken cancellationToken)
     {
-        //var events = await _eventQueryService.GetEventsAsync(cancellationToken);
-        //return Ok(events);
-        return Ok();
+        var events = await _getEventsHandler.Handle(new GetEventsQuery(), cancellationToken);
+        return Ok(events);
     }
 
     /// <summary>
@@ -41,8 +43,7 @@ public class EventsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetSeats(int eventId, int sectorId, CancellationToken cancellationToken)
     {
-       /* var seats = await _seatQueryService.GetSeatsBySectorAsync(eventId, sectorId, cancellationToken);
-        return Ok(seats);*/
-        return Ok();
+        var seats = await _getSeatsHandler.Handle(new GetSeatsQuery { EventId = eventId, SectorId = sectorId }, cancellationToken);
+        return Ok(seats);
     }
 }

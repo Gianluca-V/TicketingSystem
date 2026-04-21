@@ -29,6 +29,14 @@ public class ApplicationDbContext : DbContext, IUnitOfWork
             .HasColumnName("xmin")
             .IsRowVersion();
 
+        modelBuilder.Entity<Reservation>()
+            .Property(r => r.Id)
+            .HasDefaultValueSql("gen_random_uuid()");
+
+        modelBuilder.Entity<AuditLog>()
+            .Property(a => a.Id)
+            .HasDefaultValueSql("gen_random_uuid()");
+
         // Unique constraint for sector + seat number
         modelBuilder.Entity<Seat>()
             .HasIndex(s => new { s.SectorId, s.SeatNumber })

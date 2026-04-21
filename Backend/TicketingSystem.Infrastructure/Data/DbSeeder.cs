@@ -24,51 +24,61 @@ public static class DbSeeder
         var concertEvent = new Event
         {
             Name = "Rock Festival 2026",
-            Date = new DateTime(2026, 8, 15, 20, 0, 0, DateTimeKind.Utc),
-            Sectors = new List<Sector>()
+            EventDate = new DateTime(2026, 8, 15, 20, 0, 0, DateTimeKind.Utc),
+            Venue = "Wembley Stadium",
+            Status = "Active"
         };
+
+        context.Events.Add(concertEvent);
+        await context.SaveChangesAsync();
 
         // Create sectors
         var vipSector = new Sector
         {
             Name = "VIP",
-            Event = concertEvent,
-            Seats = new List<Seat>()
+            EventId = concertEvent.Id,
+            Event = concertEvent, // EF needs the navigation for validation if required
+            Price = 150.00m,
+            Capacity = 50
         };
 
         var generalSector = new Sector
         {
             Name = "General",
+            EventId = concertEvent.Id,
             Event = concertEvent,
-            Seats = new List<Seat>()
+            Price = 75.00m,
+            Capacity = 50
         };
 
-        concertEvent.Sectors.Add(vipSector);
-        concertEvent.Sectors.Add(generalSector);
+        context.Sectors.Add(vipSector);
+        context.Sectors.Add(generalSector);
+        await context.SaveChangesAsync();
 
         // Create 50 VIP seats
         for (int i = 1; i <= 50; i++)
         {
-            vipSector.Seats.Add(new Seat
+            context.Seats.Add(new Seat
             {
+                SectorId = vipSector.Id,
                 SeatNumber = $"VIP-{i:D3}",
                 Price = 150.00m,
-                Sector = vipSector
+                Status = SeatStatus.Available
             });
         }
 
         // Create 50 General seats
         for (int i = 1; i <= 50; i++)
         {
-            generalSector.Seats.Add(new Seat
+            context.Seats.Add(new Seat
             {
+                SectorId = generalSector.Id,
                 SeatNumber = $"GEN-{i:D3}",
                 Price = 75.00m,
-                Sector = generalSector
+                Status = SeatStatus.Available
             });
         }
 
-        context.Events.Add(concertEvent);
         await context.SaveChangesAsync();
     }
 

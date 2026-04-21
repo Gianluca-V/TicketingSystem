@@ -49,10 +49,10 @@ public class ExpiredReservationWorker : BackgroundService
                         // Log release
                         await auditRepository.AddAsync(new AuditLog
                         {
-                            UserId = "SYSTEM",
+                            UserId = 0,
                             Action = AuditAction.Released,
                             ResourceType = "Seat",
-                            ResourceId = reservation.SeatId,
+                            ResourceId = reservation.SeatId.ToString(),
                             Details = $"Seat {reservation.SeatId} released due to expired reservation {reservation.Id}"
                         }, stoppingToken);
 

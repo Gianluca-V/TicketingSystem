@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -48,7 +48,7 @@ namespace TicketingSystem.Application.UseCases.Seat.ReserveSeat
 
                 seat.Status = SeatStatus.Reserved;
 
-                var reservation = new Reservation
+                var reservation = new TicketingSystem.Domain.Entities.Reservation
                 {
                     SeatId = seat.Id,
                     UserId = cmd.UserId
@@ -63,7 +63,7 @@ namespace TicketingSystem.Application.UseCases.Seat.ReserveSeat
                     UserId = cmd.UserId,
                     Action = AuditAction.Reserved,
                     ResourceType = "Seat",
-                    ResourceId = seat.Id,
+                    ResourceId = seat.Id.ToString(),
                     Details = "Seat reserved successfully"
                 }, ct);
 
@@ -83,7 +83,7 @@ namespace TicketingSystem.Application.UseCases.Seat.ReserveSeat
                     UserId = cmd.UserId,
                     Action = AuditAction.ConflictAttempt,
                     ResourceType = "Seat",
-                    ResourceId = cmd.SeatId,
+                    ResourceId = cmd.SeatId.ToString(),
                     Details = "Concurrency conflict"
                 }, ct);
 

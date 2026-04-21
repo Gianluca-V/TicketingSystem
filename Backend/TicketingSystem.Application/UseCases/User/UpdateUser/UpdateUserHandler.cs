@@ -35,9 +35,9 @@ public class UpdateUserHandler : ICommandHandler<UpdateUserCommand>
             {
                 Action = AuditAction.Updated,
                 ResourceType = "User",
-                ResourceId = user.Id,
+                ResourceId = user.Id.ToString(),
                 Details = $"User {user.Id} updated",
-                UserId = user.Id.ToString()
+                UserId = user.Id
             }, ct);
 
             await _uow.CommitTransactionAsync(ct);

@@ -31,9 +31,9 @@ public class DeleteSeatHandler : ICommandHandler<DeleteSeatCommand>
             {
                 Action = AuditAction.Deleted,
                 ResourceType = "Seat",
-                ResourceId = command.Id,
+                ResourceId = command.Id.ToString(),
                 Details = $"Seat {command.Id} deleted",
-                UserId = ""
+                UserId = 0
             }, ct);
 
             await _uow.CommitTransactionAsync(ct);

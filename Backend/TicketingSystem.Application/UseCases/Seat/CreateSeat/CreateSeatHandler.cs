@@ -43,9 +43,9 @@ public class CreateSeatHandler : ICommandHandler<CreateSeatCommand, int>
             {
                 Action = AuditAction.Created,
                 ResourceType = "Seat",
-                ResourceId = seat.Id,
+                ResourceId = seat.Id.ToString(),
                 Details = $"Seat {seat.SeatNumber} created for Sector {command.SectorId}",
-                UserId = ""
+                UserId = 0
             }, ct);
 
             await _uow.CommitTransactionAsync(ct);

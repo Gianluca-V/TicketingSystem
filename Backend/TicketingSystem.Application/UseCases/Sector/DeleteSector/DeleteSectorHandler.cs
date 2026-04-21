@@ -31,9 +31,9 @@ public class DeleteSectorHandler : ICommandHandler<DeleteSectorCommand>
             {
                 Action = AuditAction.Deleted,
                 ResourceType = "Sector",
-                ResourceId = command.Id,
+                ResourceId = command.Id.ToString(),
                 Details = $"Sector {command.Id} deleted",
-                UserId = ""
+                UserId = 0
             }, ct);
 
             await _uow.CommitTransactionAsync(ct);

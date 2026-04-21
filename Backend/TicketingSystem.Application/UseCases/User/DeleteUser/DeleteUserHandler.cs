@@ -31,9 +31,9 @@ public class DeleteUserHandler : ICommandHandler<DeleteUserCommand>
             {
                 Action = AuditAction.Deleted,
                 ResourceType = "User",
-                ResourceId = command.Id,
+                ResourceId = command.Id.ToString(),
                 Details = $"User {command.Id} deleted",
-                UserId = command.Id.ToString()
+                UserId = 0
             }, ct);
 
             await _uow.CommitTransactionAsync(ct);

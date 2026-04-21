@@ -15,10 +15,9 @@ public class ReservationRepository : IReservationRepository
         _context = context;
     }
 
-    public async Task<Reservation?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<Reservation?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await _context.Reservations
-            .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
+        return await _context.Reservations.FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
     }
 
     public async Task<IEnumerable<Reservation>> GetAllAsync(ReservationFilter filter, CancellationToken cancellationToken)
@@ -29,7 +28,10 @@ public class ReservationRepository : IReservationRepository
             query = query.Where(r => r.SeatId == filter.SeatId);
 
         if (!string.IsNullOrEmpty(filter.UserId))
-            query = query.Where(r => r.UserId == filter.UserId);
+        {
+             if(int.TryParse(filter.UserId, out int userId))
+                query = query.Where(r => r.UserId == userId);
+        }
 
         if (filter.IsActive.HasValue)
         {
@@ -47,19 +49,16 @@ public class ReservationRepository : IReservationRepository
     public async Task AddAsync(Reservation reservation, CancellationToken cancellationToken = default)
     {
         await _context.Reservations.AddAsync(reservation, cancellationToken);
-        await Task.CompletedTask;
     }
 
     public async Task UpdateAsync(Reservation reservation, CancellationToken cancellationToken = default)
     {
-        _context.Reservations.Remove(reservation);
-        await Task.CompletedTask;
+        _context.Reservations.Update(reservation);
     }
 
     public async Task DeleteAsync(Reservation reservation, CancellationToken cancellationToken = default)
     {
         _context.Reservations.Remove(reservation);
-        await Task.CompletedTask;
     }
 
     public async Task<IEnumerable<Reservation>> GetExpiredAsync(CancellationToken cancellationToken = default)

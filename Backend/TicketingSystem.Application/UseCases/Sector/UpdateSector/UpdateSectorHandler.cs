@@ -35,9 +35,9 @@ public class UpdateSectorHandler : ICommandHandler<UpdateSectorCommand>
             {
                 Action = AuditAction.Updated,
                 ResourceType = "Sector",
-                ResourceId = sector.Id,
+                ResourceId = sector.Id.ToString(),
                 Details = $"Sector {sector.Id} updated",
-                UserId = ""
+                UserId = 0
             }, ct);
 
             await _uow.CommitTransactionAsync(ct);

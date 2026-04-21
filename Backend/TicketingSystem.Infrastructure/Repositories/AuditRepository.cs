@@ -20,12 +20,15 @@ public class AuditRepository : IAuditRepository
         await _context.AuditLogs.AddAsync(auditLog, cancellationToken);
     }
 
-    public async Task<IEnumerable<AuditLog>> GetAllAsync(AuditFilter filter,CancellationToken cancellationToken)
+    public async Task<IEnumerable<AuditLog>> GetAllAsync(AuditFilter filter, CancellationToken cancellationToken)
     {
         IQueryable<AuditLog> query = _context.AuditLogs;
 
         if (!string.IsNullOrEmpty(filter.UserId))
-            query = query.Where(a => a.UserId == filter.UserId);
+        {
+            if (int.TryParse(filter.UserId, out int userId))
+                query = query.Where(a => a.UserId == userId);
+        }
 
         if (filter.Action.HasValue)
             query = query.Where(a => a.Action == filter.Action);

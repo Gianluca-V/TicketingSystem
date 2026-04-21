@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using TicketingSystem.Application.DTOs;
 using TicketingSystem.Application.Interfaces.Services;
+using TicketingSystem.Application.UseCases.Seat.ReserveSeat;
 
 namespace TicketingSystem.Api.Controllers;
 
@@ -8,14 +9,14 @@ namespace TicketingSystem.Api.Controllers;
 [Route("api/v1/events/{eventId}/sectors/{sectorId}")]
 public class ReservationsController : ControllerBase
 {
-    //private readonly IReservationCommandService _reservationCommandService;
+    private readonly ICommandHandler<ReserveSeatCommand, ReserveSeatResponse> _reserveSeatHandler;
     private readonly ILogger<ReservationsController> _logger;
 
     public ReservationsController(
-        IReservationCommandService reservationCommandService,
+        ICommandHandler<ReserveSeatCommand, ReserveSeatResponse> reserveSeatHandler,
         ILogger<ReservationsController> logger)
     {
-        //_reservationCommandService = reservationCommandService;
+        _reserveSeatHandler = reserveSeatHandler;
         _logger = logger;
     }
 
@@ -30,27 +31,25 @@ public class ReservationsController : ControllerBase
     public async Task<IActionResult> ReserveSeat(
         int eventId,
         int sectorId,
-        [FromBody] ReserveSeatRequest request,
+        [FromBody] ReserveSeatCommand command,
         CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(request.UserId))
+        if (command.UserId <= 0)
         {
-            return BadRequest(new { error = "UserId is required" });
+            return BadRequest(new { error = "Valid UserId is required" });
         }
 
-        if (request.SeatId <= 0)
+        if (command.SeatId <= 0)
         {
             return BadRequest(new { error = "Valid SeatId is required" });
         }
 
-        /*var result = await _reservationCommandService.ReserveSeatAsync(
-            eventId, sectorId, request.UserId, request.SeatId, cancellationToken);
+        var result = await _reserveSeatHandler.Handle(command, cancellationToken);
 
         return CreatedAtAction(
             actionName: nameof(PaymentsController.GetReservation),
             controllerName: "Payments",
             routeValues: new { reservationId = result.ReservationId },
-            value: result);*/
-        return Ok();
+            value: result);
     }
 }

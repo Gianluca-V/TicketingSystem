@@ -36,9 +36,9 @@ public class UpdateEventHandler : ICommandHandler<UpdateEventCommand>
             {
                 Action = AuditAction.Updated,
                 ResourceType = "Event",
-                ResourceId = @event.Id,
+                ResourceId = @event.Id.ToString(),
                 Details = $"Event {@event.Id} updated",
-                UserId = ""
+                UserId = 0
             }, ct);
 
             await _uow.CommitTransactionAsync(ct);

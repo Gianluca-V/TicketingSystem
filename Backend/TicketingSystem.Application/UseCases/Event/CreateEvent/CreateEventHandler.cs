@@ -37,9 +37,9 @@ public class CreateEventHandler : ICommandHandler<CreateEventCommand, int>
             {
                 Action = AuditAction.Created,
                 ResourceType = "Event",
-                ResourceId = @event.Id,
+                ResourceId = @event.Id.ToString(),
                 Details = $"Event {@event.Name} created",
-                UserId = ""
+                UserId = 0
             }, ct);
 
             await _uow.CommitTransactionAsync(ct);

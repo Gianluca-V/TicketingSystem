@@ -43,9 +43,9 @@ public class CreateSectorHandler : ICommandHandler<CreateSectorCommand, int>
             {
                 Action = AuditAction.Created,
                 ResourceType = "Sector",
-                ResourceId = sector.Id,
+                ResourceId = sector.Id.ToString(),
                 Details = $"Sector {sector.Name} created for Event {command.EventId}",
-                UserId = ""
+                UserId = 0
             }, ct);
 
             await _uow.CommitTransactionAsync(ct);

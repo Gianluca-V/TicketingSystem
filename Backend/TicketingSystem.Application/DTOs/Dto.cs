@@ -12,7 +12,7 @@ public record SeatDto(
 );
 
 public record ReservationDto(
-    int Id,
+    Guid Id,
     int SeatId,
     string UserId,
     DateTime ReservedAt,
@@ -21,7 +21,7 @@ public record ReservationDto(
 );
 
 public record ReserveSeatResponse(
-    int ReservationId,
+    Guid ReservationId,
     DateTime ExpiresAt
 );
 
@@ -38,11 +38,11 @@ public record EventDto(
 );
 
 public record AuditLogDto(
-    int Id,
-    string UserId,
+    Guid Id,
+    int UserId,
     string Action,
     string ResourceType,
-    int ResourceId,
+    string ResourceId,
     string Details,
     DateTime OccurredAt
 );
@@ -60,4 +60,13 @@ public record SectorDto(
     string Name,
     decimal Price,
     int Capacity
+);
+
+public record ReserveSeatRequest(
+    int SeatId,
+    int UserId
+);
+
+public record PaymentRequest(
+    string TransactionId
 );

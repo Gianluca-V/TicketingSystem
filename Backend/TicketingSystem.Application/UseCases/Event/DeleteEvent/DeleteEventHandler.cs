@@ -31,9 +31,9 @@ public class DeleteEventHandler : ICommandHandler<DeleteEventCommand>
             {
                 Action = AuditAction.Deleted,
                 ResourceType = "Event",
-                ResourceId = command.Id,
+                ResourceId = command.Id.ToString(),
                 Details = $"Event {command.Id} deleted",
-                UserId = ""
+                UserId = 0
             }, ct);
 
             await _uow.CommitTransactionAsync(ct);

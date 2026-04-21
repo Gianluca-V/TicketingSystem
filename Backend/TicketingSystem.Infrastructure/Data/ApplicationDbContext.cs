@@ -18,6 +18,7 @@ public class ApplicationDbContext : DbContext, IUnitOfWork
     public DbSet<Seat> Seats => Set<Seat>();
     public DbSet<Reservation> Reservations => Set<Reservation>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<User> Users => Set<User>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -51,29 +52,27 @@ public class ApplicationDbContext : DbContext, IUnitOfWork
         }
 
         // Configure relationships
-        modelBuilder.Entity<Event>()
-            .HasMany(e => e.Sectors)
-            .WithOne(s => s.Event)
+        modelBuilder.Entity<Sector>()
+            .HasOne<Event>()
+            .WithMany()
             .HasForeignKey(s => s.EventId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<Sector>()
-            .HasMany(s => s.Seats)
-            .WithOne(s => s.Sector)
+        modelBuilder.Entity<Seat>()
+            .HasOne<Sector>()
+            .WithMany()
             .HasForeignKey(s => s.SectorId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<Seat>()
-            .HasMany(s => s.Reservations)
-            .WithOne(r => r.Seat)
+        modelBuilder.Entity<Reservation>()
+            .HasOne<Seat>()
+            .WithMany()
             .HasForeignKey(r => r.SeatId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        // Use NoTracking by default for read operations
-        optionsBuilder.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
     }
 
     // IUnitOfWork implementation

@@ -23,6 +23,9 @@ public static class DependencyInjection
         services.AddScoped<ISeatRepository, SeatRepository>();
         services.AddScoped<IReservationRepository, ReservationRepository>();
         services.AddScoped<IAuditRepository, AuditRepository>();
+        services.AddScoped<IEventRepository, EventRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<ISectorRepository, SectorRepository>();
 
         // Register CQRS Query Services
         //services.AddScoped<IEventQueryService, EventQueryService>();

@@ -6,5 +6,8 @@ public enum AuditAction
     PaymentConfirmed = 1,
     Released = 2,
     ConflictAttempt = 3,
-    ExpiredLock = 4
+    ExpiredLock = 4,
+    Created = 5,
+    Deleted = 6,
+    Updated = 7
 }

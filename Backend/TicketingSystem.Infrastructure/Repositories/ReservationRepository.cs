@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TicketingSystem.Application.Interfaces.persistence;
 using TicketingSystem.Domain.Entities;
+using TicketingSystem.Domain.QueryFilters;
 using TicketingSystem.Infrastructure.Data;
 
 namespace TicketingSystem.Infrastructure.Repositories;
@@ -17,26 +18,41 @@ public class ReservationRepository : IReservationRepository
     public async Task<Reservation?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         return await _context.Reservations
-            .Include(r => r.Seat)
             .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
     }
 
-    public async Task<Reservation?> GetActiveAsync(int seatId, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<Reservation>> GetAllAsync(ReservationFilter filter, CancellationToken cancellationToken)
     {
-        return await _context.Reservations
-            .Where(r => r.SeatId == seatId && !r.PaidAt.HasValue && r.ExpiresAt > DateTime.UtcNow)
-            .OrderByDescending(r => r.ReservedAt)
-            .FirstOrDefaultAsync(cancellationToken);
+        IQueryable<Reservation> query = _context.Reservations;
+
+        if (filter.SeatId.HasValue)
+            query = query.Where(r => r.SeatId == filter.SeatId);
+
+        if (!string.IsNullOrEmpty(filter.UserId))
+            query = query.Where(r => r.UserId == filter.UserId);
+
+        if (filter.IsActive.HasValue)
+        {
+            if (filter.IsActive.Value)
+                query = query.Where(r => !r.IsExpired);
+            else
+                query = query.Where(r => r.IsExpired);
+        }
+
+        query = query.ApplyPaging(filter.Page, filter.Take);
+
+        return await query.ToListAsync(cancellationToken);
     }
 
     public async Task AddAsync(Reservation reservation, CancellationToken cancellationToken = default)
     {
         await _context.Reservations.AddAsync(reservation, cancellationToken);
+        await Task.CompletedTask;
     }
 
     public async Task UpdateAsync(Reservation reservation, CancellationToken cancellationToken = default)
     {
-        _context.Reservations.Update(reservation);
+        _context.Reservations.Remove(reservation);
         await Task.CompletedTask;
     }
 

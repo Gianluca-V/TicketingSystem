@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using TicketingSystem.Domain.Exceptions;
 
 namespace TicketingSystem.Api.Middleware;
@@ -34,7 +35,7 @@ public class GlobalExceptionMiddleware
 
         switch (exception)
         {
-            case ConcurrencyException:
+            case DbUpdateConcurrencyException:
                 context.Response.StatusCode = StatusCodes.Status409Conflict;
                 await context.Response.WriteAsJsonAsync(new
                 {

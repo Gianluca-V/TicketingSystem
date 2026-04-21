@@ -6,5 +6,6 @@ public class Sector
     public int EventId { get; set; }
     public required Event Event { get; set; }
     public required string Name { get; set; }
-    public ICollection<Seat> Seats { get; set; } = new List<Seat>();
+    public decimal Price { get; set; }
+    public int Capacity { get; set; }
 }

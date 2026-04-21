@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using TicketingSystem.Api.Middleware;
 using TicketingSystem.Infrastructure;
 using TicketingSystem.Infrastructure.Data;
+using TicketingSystem.Application;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +11,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddApplication();
 
 builder.Services.AddCors(options =>
 {

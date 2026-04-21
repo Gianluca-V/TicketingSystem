@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TicketingSystem.Application.Interfaces.persistence;
 using TicketingSystem.Domain.Entities;
+using TicketingSystem.Domain.QueryFilters;
 using TicketingSystem.Infrastructure.Data;
 
 namespace TicketingSystem.Infrastructure.Repositories;
@@ -14,26 +15,33 @@ public class SeatRepository : ISeatRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<Seat>> GetAll(CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<Seat>> GetAllAsync(SeatFilter filter, CancellationToken cancellationToken)
     {
-        return await _context.Seats
-            .Include(s => s.Sector)
-            .ToListAsync(cancellationToken);
+        IQueryable<Seat> query = _context.Seats;
+
+        if (!string.IsNullOrEmpty(filter.Status))
+            query = query.Where(s => s.Status.ToString() == filter.Status);
+
+        if (filter.SectorId.HasValue)
+            query = query.Where(s => s.SectorId == filter.SectorId);
+
+        if (filter.EventId.HasValue)
+        {
+            var sectorIds = _context.Sectors
+                .Where(sec => sec.EventId == filter.EventId)
+                .Select(sec => sec.Id);
+
+            query = query.Where(s => sectorIds.Contains(s.SectorId));
+        }
+
+        query = query.ApplyPaging(filter.Page, filter.Take);
+
+        return await query.ToListAsync(cancellationToken);
     }
 
     public async Task<Seat?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        return await _context.Seats
-            .Include(s => s.Sector)
-            .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
-    }
-
-    public async Task<IEnumerable<Seat>> GetBySectorAsync(int sectorId, CancellationToken cancellationToken = default)
-    {
-        return await _context.Seats
-            .Include(s => s.Sector)
-            .Where(s => s.SectorId == sectorId)
-            .ToListAsync(cancellationToken);
+        return await _context.Seats.FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
     }
 
     public async Task AddAsync(Seat seat, CancellationToken cancellationToken = default)
@@ -41,9 +49,17 @@ public class SeatRepository : ISeatRepository
         await _context.Seats.AddAsync(seat, cancellationToken);
     }
 
-    public async Task UpdateAsync(Seat seat, CancellationToken cancellationToken = default)
+    public async Task UpdateAsync(Seat seat, CancellationToken ct)
     {
         _context.Seats.Update(seat);
-        await Task.CompletedTask;
+    }
+
+    public async Task DeleteAsync(int id, CancellationToken ct = default)
+    {
+        var seat = await GetByIdAsync(id, ct);
+        if (seat != null)
+        {
+            _context.Seats.Remove(seat);
+        }
     }
 }

@@ -4,7 +4,6 @@ public class Reservation
 {
     public int Id { get; set; }
     public int SeatId { get; set; }
-    public required Seat Seat { get; set; }
     public required string UserId { get; set; }
     public DateTime ReservedAt { get; set; } = DateTime.UtcNow;
     public DateTime? PaidAt { get; set; }

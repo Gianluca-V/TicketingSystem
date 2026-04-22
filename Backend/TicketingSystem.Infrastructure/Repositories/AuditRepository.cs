@@ -4,19 +4,27 @@ using TicketingSystem.Domain.Entities;
 using TicketingSystem.Domain.QueryFilters;
 using TicketingSystem.Infrastructure.Data;
 
+using TicketingSystem.Application.Interfaces.Services;
+
 namespace TicketingSystem.Infrastructure.Repositories;
 
 public class AuditRepository : IAuditRepository
 {
     private readonly ApplicationDbContext _context;
+    private readonly ICurrentUserService _currentUserService;
 
-    public AuditRepository(ApplicationDbContext context)
+    public AuditRepository(ApplicationDbContext context, ICurrentUserService currentUserService)
     {
         _context = context;
+        _currentUserService = currentUserService;
     }
 
     public async Task AddAsync(AuditLog auditLog, CancellationToken cancellationToken = default)
     {
+        if (auditLog.UserId == 0 && _currentUserService.UserId.HasValue)
+        {
+            auditLog.UserId = _currentUserService.UserId.Value;
+        }
         await _context.AuditLogs.AddAsync(auditLog, cancellationToken);
     }
 

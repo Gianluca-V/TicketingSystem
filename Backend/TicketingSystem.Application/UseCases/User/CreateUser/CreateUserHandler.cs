@@ -8,12 +8,14 @@ public class CreateUserHandler : ICommandHandler<CreateUserCommand, int>
 {
     private readonly IUserRepository _userRepository;
     private readonly IAuditRepository _auditRepository;
+    private readonly IPasswordHasher _passwordHasher;
     private readonly IUnitOfWork _uow;
 
-    public CreateUserHandler(IUserRepository userRepository, IAuditRepository auditRepository, IUnitOfWork uow)
+    public CreateUserHandler(IUserRepository userRepository, IAuditRepository auditRepository, IPasswordHasher passwordHasher, IUnitOfWork uow)
     {
         _userRepository = userRepository;
         _auditRepository = auditRepository;
+        _passwordHasher = passwordHasher;
         _uow = uow;
     }
 
@@ -29,7 +31,7 @@ public class CreateUserHandler : ICommandHandler<CreateUserCommand, int>
             {
                 Name = command.Name,
                 Email = command.Email,
-                PasswordHash = command.Password // hash it
+                PasswordHash = _passwordHasher.Hash(command.Password)
             };
 
             await _userRepository.AddAsync(user, ct);

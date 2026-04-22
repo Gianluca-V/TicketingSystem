@@ -27,6 +27,11 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ISectorRepository, SectorRepository>();
 
+        services.AddScoped<IPasswordHasher, PasswordHasher>();
+        services.AddScoped<IJwtService, JwtService>();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddHttpContextAccessor();
+
         // Register CQRS Query Services
         //services.AddScoped<IEventQueryService, EventQueryService>();
        // services.AddScoped<ISeatQueryService, SeatQueryService>();

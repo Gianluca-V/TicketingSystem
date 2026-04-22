@@ -40,7 +40,7 @@ public class PaymentsController : ControllerBase
     /// <summary>
     /// Pay for a reservation
     /// </summary>
-    [HttpPost("{reservationId}/pay")]
+    [HttpPost("{reservationId}/payments")]
     [ProducesResponseType(typeof(PaymentResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

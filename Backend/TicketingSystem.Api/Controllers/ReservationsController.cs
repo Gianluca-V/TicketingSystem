@@ -6,7 +6,7 @@ using TicketingSystem.Application.UseCases.Seat.ReserveSeat;
 namespace TicketingSystem.Api.Controllers;
 
 [ApiController]
-[Route("api/v1/events/{eventId}/sectors/{sectorId}")]
+[Route("api/v1/seats/{seatId}")]
 public class ReservationsController : ControllerBase
 {
     private readonly ICommandHandler<ReserveSeatCommand, ReserveSeatResponse> _reserveSeatHandler;
@@ -29,19 +29,18 @@ public class ReservationsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> ReserveSeat(
-        int eventId,
-        int sectorId,
+        int seatId,
         [FromBody] ReserveSeatCommand command,
         CancellationToken cancellationToken)
     {
+        if (seatId != command.SeatId)
+        {
+            return BadRequest(new { error = "SeatId mismatch" });
+        }
+
         if (command.UserId <= 0)
         {
             return BadRequest(new { error = "Valid UserId is required" });
-        }
-
-        if (command.SeatId <= 0)
-        {
-            return BadRequest(new { error = "Valid SeatId is required" });
         }
 
         var result = await _reserveSeatHandler.Handle(command, cancellationToken);

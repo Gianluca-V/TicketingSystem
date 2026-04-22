@@ -10,6 +10,11 @@ services:
       - "5433:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ticketing_user -d ticketing_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - ticketing-network
 
@@ -18,14 +23,28 @@ services:
       context: .
       dockerfile: ./Backend/Dockerfile
     container_name: ticketing-api
-    ports:
-      - "5000:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=ticketing_db;Username=ticketing_user;Password=SecurePass123!;TrustServerCertificate=true;
+      - Jwt__Secret=A_Very_Long_And_Secure_Secret_Key_At_Least_32_Chars
+      - Jwt__Issuer=TicketingSystem
+      - Jwt__Audience=TicketingSystemUsers
     depends_on:
       postgres:
         condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - ticketing-network
+
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+    container_name: ticketing-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - api
     restart: unless-stopped
     networks:
       - ticketing-network

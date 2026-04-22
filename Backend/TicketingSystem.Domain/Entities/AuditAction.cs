@@ -9,5 +9,6 @@ public enum AuditAction
     ExpiredLock = 4,
     Created = 5,
     Deleted = 6,
-    Updated = 7
+    Updated = 7,
+    Login = 8
 }

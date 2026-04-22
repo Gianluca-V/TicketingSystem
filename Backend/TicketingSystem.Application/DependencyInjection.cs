@@ -21,29 +21,26 @@ using TicketingSystem.Application.UseCases.Seat.DeleteSeat;
 using TicketingSystem.Application.UseCases.Seat.GetSeats;
 using TicketingSystem.Application.UseCases.Seat.Handlers;
 
+using TicketingSystem.Application.UseCases.User.Login;
+
 namespace TicketingSystem.Application;
 
 public static class DependencyInjection
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        // Event Handlers
-        services.AddScoped<ICommandHandler<CreateEventCommand, int>, CreateEventHandler>();
-        services.AddScoped<ICommandHandler<UpdateEventCommand>, UpdateEventHandler>();
-        services.AddScoped<ICommandHandler<DeleteEventCommand>, DeleteEventHandler>();
-        services.AddScoped<IQueryHandler<GetEventsQuery, IEnumerable<EventDto>>, GetEventsHandler>();
+        // User Handlers
+        services.AddScoped<ICommandHandler<CreateUserCommand, int>, CreateUserHandler>();
+        services.AddScoped<ICommandHandler<UpdateUserCommand>, UpdateUserHandler>();
+        services.AddScoped<ICommandHandler<DeleteUserCommand>, DeleteUserHandler>();
+        services.AddScoped<ICommandHandler<LoginCommand, string>, LoginHandler>();
+        services.AddScoped<IQueryHandler<GetUsersQuery, IEnumerable<UserDto>>, GetUsersHandler>();
 
         // Sector Handlers
         services.AddScoped<ICommandHandler<CreateSectorCommand, int>, CreateSectorHandler>();
         services.AddScoped<ICommandHandler<UpdateSectorCommand>, UpdateSectorHandler>();
         services.AddScoped<ICommandHandler<DeleteSectorCommand>, DeleteSectorHandler>();
         services.AddScoped<IQueryHandler<GetSectorsQuery, IEnumerable<SectorDto>>, GetSectorsHandler>();
-
-        // User Handlers
-        services.AddScoped<ICommandHandler<CreateUserCommand, int>, CreateUserHandler>();
-        services.AddScoped<ICommandHandler<UpdateUserCommand>, UpdateUserHandler>();
-        services.AddScoped<ICommandHandler<DeleteUserCommand>, DeleteUserHandler>();
-        services.AddScoped<IQueryHandler<GetUsersQuery, IEnumerable<UserDto>>, GetUsersHandler>();
 
         // Seat Handlers
         services.AddScoped<ICommandHandler<CreateSeatCommand, int>, CreateSeatHandler>();

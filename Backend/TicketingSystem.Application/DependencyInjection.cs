@@ -19,8 +19,8 @@ using TicketingSystem.Application.UseCases.Seat.CreateSeat;
 using TicketingSystem.Application.UseCases.Seat.UpdateSeat;
 using TicketingSystem.Application.UseCases.Seat.DeleteSeat;
 using TicketingSystem.Application.UseCases.Seat.GetSeats;
+using TicketingSystem.Application.UseCases.Seat.ReserveSeat;
 using TicketingSystem.Application.UseCases.Seat.Handlers;
-
 using TicketingSystem.Application.UseCases.User.Login;
 
 namespace TicketingSystem.Application;
@@ -53,6 +53,7 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<UpdateSeatCommand>, UpdateSeatHandler>();
         services.AddScoped<ICommandHandler<DeleteSeatCommand>, DeleteSeatHandler>();
         services.AddScoped<IQueryHandler<GetSeatsQuery, IEnumerable<SeatDto>>, GetSeatsQueryHandler>();
+        services.AddScoped<ICommandHandler<ReserveSeatCommand, ReserveSeatResponse>, ReserveSeatHandler>();
 
         // Payment Handlers
         services.AddScoped<ICommandHandler<ProcessPaymentCommand, PaymentResponse>, ProcessPaymentHandler>();

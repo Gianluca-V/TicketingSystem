@@ -1,12 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { authApi } from '@/api/auth'
+import { ADMIN_CONFIG } from '@/api/config'
 
 /**
  * Auth store.
- * Token is kept in memory (not localStorage) to reduce XSS surface.
- * sessionStorage is used as a fallback to survive page refreshes within the
- * same browser tab, but is cleared on tab close.
+ * Token is kept in sessionStorage (cleared on tab close, not localStorage).
+ * Admin status is derived from the JWT payload — no separate role endpoint needed.
  */
 export const useAuthStore = defineStore('auth', () => {
   // ── State ──────────────────────────────────────────────────────────────────
@@ -20,6 +20,14 @@ export const useAuthStore = defineStore('auth', () => {
   const userId          = computed(() => user.value?.id ?? null)
 
   // ── Helpers ────────────────────────────────────────────────────────────────
+  function _decodeJwt(tkn) {
+    try {
+      return JSON.parse(atob(tkn.split('.')[1]))
+    } catch {
+      return {}
+    }
+  }
+
   function _persist(tkn, usr) {
     token.value = tkn
     user.value  = usr
@@ -39,13 +47,13 @@ export const useAuthStore = defineStore('auth', () => {
     loading.value = true
     error.value   = null
     try {
-      const data = await authApi.login(email, password)
-      // Decode JWT payload to get user id/email without an extra round-trip
-      const payload = JSON.parse(atob(data.token.split('.')[1]))
+      const data    = await authApi.login(email, password)
+      const payload = _decodeJwt(data.token)
       _persist(data.token, {
-        id:    payload.sub ?? payload.nameid ?? payload.userId,
-        email: payload.email ?? email,
-        name:  payload.name  ?? email.split('@')[0],
+        id:      payload.sub ?? payload.nameid ?? payload.userId,
+        email:   payload.email ?? email,
+        name:    payload.name  ?? email.split('@')[0],
+        ...payload,
       })
       return true
     } catch (e) {
@@ -70,13 +78,8 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  function logout() {
-    _clear()
-  }
-
-  function clearError() {
-    error.value = null
-  }
+  function logout() { _clear() }
+  function clearError() { error.value = null }
 
   return {
     token, user, loading, error,

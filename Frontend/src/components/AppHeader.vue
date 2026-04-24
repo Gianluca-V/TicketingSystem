@@ -15,6 +15,9 @@
         <router-link to="/profile" class="nav-link" active-class="nav-link--active">
           Mi Perfil
         </router-link>
+        <router-link to="/admin" class="nav-link nav-link--admin" active-class="nav-link--active">
+          ⚙ Admin
+        </router-link>
       </nav>
 
       <!-- User menu -->
@@ -40,6 +43,7 @@
       <div v-if="mobileOpen" class="mobile-menu">
         <router-link to="/" class="mobile-link" @click="mobileOpen = false">Eventos</router-link>
         <router-link to="/profile" class="mobile-link" @click="mobileOpen = false">Mi Perfil</router-link>
+        <router-link to="/admin" class="mobile-link mobile-link--admin" @click="mobileOpen = false">⚙ Panel Admin</router-link>
         <button class="btn btn-ghost btn-sm" style="margin-top:8px" @click="handleLogout">
           Cerrar sesión
         </button>
@@ -180,4 +184,6 @@ async function handleLogout() {
   .nav, .header-actions { display: none; }
   .mobile-toggle { display: flex; }
 }
+.mobile-link--admin { color: var(--c-gold); }
+.nav-link--admin { color: var(--c-gold) !important; }
 </style>

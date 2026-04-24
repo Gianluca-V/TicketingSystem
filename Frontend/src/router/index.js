@@ -16,7 +16,7 @@ const routes = [
     meta: { public: true, hideNav: true },
   },
 
-  // ── Protected ──────────────────────────────────────────────────────────────
+  // ── User routes ────────────────────────────────────────────────────────────
   {
     path: '/',
     name: 'Events',
@@ -62,6 +62,56 @@ const routes = [
     meta: { requiresAuth: true },
   },
 
+  // ── Admin routes (requiresAuth + requiresAdmin) ────────────────────────────
+  {
+    path: '/admin',
+    component: () => import('@/views/admin/AdminLayout.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true, hideNav: true },
+    children: [
+      {
+        path: '',
+        name: 'AdminDashboard',
+        component: () => import('@/views/admin/AdminDashboard.vue'),
+      },
+      // Events
+      {
+        path: 'events',
+        name: 'AdminEvents',
+        component: () => import('@/views/admin/AdminEventsView.vue'),
+      },
+      {
+        path: 'events/:eventId/sectors',
+        name: 'AdminSectors',
+        component: () => import('@/views/admin/AdminSectorsView.vue'),
+        props: true,
+      },
+      {
+        path: 'events/:eventId/sectors/:sectorId/seats',
+        name: 'AdminSeats',
+        component: () => import('@/views/admin/AdminSeatsView.vue'),
+        props: true,
+      },
+      // Users
+      {
+        path: 'users',
+        name: 'AdminUsers',
+        component: () => import('@/views/admin/AdminUsersView.vue'),
+      },
+      // Reservations
+      {
+        path: 'reservations',
+        name: 'AdminReservations',
+        component: () => import('@/views/admin/AdminReservationsView.vue'),
+      },
+      // Audit
+      {
+        path: 'audit',
+        name: 'AdminAudit',
+        component: () => import('@/views/admin/AdminAuditView.vue'),
+      },
+    ],
+  },
+
   // ── Fallback ────────────────────────────────────────────────────────────────
   { path: '/:pathMatch(.*)*', redirect: '/' },
 ]
@@ -72,12 +122,15 @@ const router = createRouter({
   scrollBehavior: () => ({ top: 0 }),
 })
 
-// ── Global navigation guard ──────────────────────────────────────────────────
 router.beforeEach((to) => {
   const auth = useAuthStore()
 
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
     return { name: 'Login', query: { redirect: to.fullPath } }
+  }
+
+  if (to.meta.requiresAdmin && !auth.isAdmin) {
+    return { name: 'Events' }  // silently redirect non-admins
   }
 
   if (to.meta.public && auth.isAuthenticated) {

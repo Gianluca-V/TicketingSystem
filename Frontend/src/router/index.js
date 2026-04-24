@@ -62,11 +62,11 @@ const routes = [
     meta: { requiresAuth: true },
   },
 
-  // ── Admin routes (requiresAuth + requiresAdmin) ────────────────────────────
+  // ── Admin routes (requiresAuth) ────────────────────────────
   {
     path: '/admin',
     component: () => import('@/views/admin/AdminLayout.vue'),
-    meta: { requiresAuth: true, requiresAdmin: true, hideNav: true },
+    meta: { requiresAuth: true},
     children: [
       {
         path: '',
@@ -127,10 +127,6 @@ router.beforeEach((to) => {
 
   if (to.meta.requiresAuth && !auth.isAuthenticated) {
     return { name: 'Login', query: { redirect: to.fullPath } }
-  }
-
-  if (to.meta.requiresAdmin && !auth.isAdmin) {
-    return { name: 'Events' }  // silently redirect non-admins
   }
 
   if (to.meta.public && auth.isAuthenticated) {

@@ -1,7 +1,5 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { authApi } from '@/api/auth'
-import { ADMIN_CONFIG } from '@/api/config'
 
 /**
  * Auth store.

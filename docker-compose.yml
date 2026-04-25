@@ -1,11 +1,11 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: ticketing-postgres
+    container_name: ticketing-postgres 
     environment:
-      POSTGRES_USER: ticketing_user
+      POSTGRES_USER: ticketing_user    
       POSTGRES_PASSWORD: SecurePass123!
-      POSTGRES_DB: ticketing_db
+      POSTGRES_DB: ticketing_db        
     ports:
       - "5433:5432"
     volumes:
@@ -32,6 +32,12 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     restart: unless-stopped
     networks:
       - ticketing-network
@@ -44,7 +50,8 @@ services:
     ports:
       - "80:80"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - ticketing-network

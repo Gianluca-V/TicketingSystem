@@ -12,11 +12,13 @@
       </div>
 
       <div v-if="auth.error" class="alert alert-error">
-        <span>⚠</span> {{
+        <span>⚠</span> 
+          <!--{{
           auth.error === 'Invalid credentials'
             ? 'Correo o contraseña incorrectos'
             : 'Ha ocurrido un error. Por favor, intentá nuevamente.' 
-            }}
+      }}-->
+          {{ auth.error }}
       </div>
 
       <form class="auth-form" @submit.prevent="handleSubmit">

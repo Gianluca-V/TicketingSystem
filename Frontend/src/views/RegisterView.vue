@@ -10,10 +10,7 @@
       </div>
 
       <div v-if="auth.error" class="alert alert-error">
-        <span>⚠</span> {{ auth.error
-          ? 'Ha ocurrido un error. Por favor, intentá nuevamente.'
-          : ''
-        }}
+        <span>⚠</span> {{ auth.error }}
       </div>
 
       <form class="auth-form" @submit.prevent="handleSubmit">

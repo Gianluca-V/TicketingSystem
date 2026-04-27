@@ -38,6 +38,7 @@ client.interceptors.response.use(
     }
 
     const message =
+      data?.error ||
       data?.message ||
       data?.title  ||
       (typeof data === 'string' ? data : null) ||

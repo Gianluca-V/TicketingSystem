@@ -1,28 +1,31 @@
 using FluentAssertions;
+using Microsoft.AspNetCore.Identity;
 using Moq;
 using TicketingSystem.Application.Interfaces.persistence;
 using TicketingSystem.Application.Interfaces.Services;
 using TicketingSystem.Application.UseCases.User.UpdateUser;
 using TicketingSystem.Domain.Entities;
+using TicketingSystem.UnitTests.Helpers;
 using Xunit;
+using DomainUser = TicketingSystem.Domain.Entities.User;
 
 namespace TicketingSystem.UnitTests.UseCases.User;
 
 public class UpdateUserHandlerTests
 {
-    private readonly Mock<IUserRepository> _userRepositoryMock;
+    private readonly Mock<UserManager<DomainUser>> _userManagerMock;
     private readonly Mock<IAuditRepository> _auditRepositoryMock;
     private readonly Mock<IUnitOfWork> _uowMock;
     private readonly UpdateUserHandler _handler;
 
     public UpdateUserHandlerTests()
     {
-        _userRepositoryMock = new Mock<IUserRepository>();
+        _userManagerMock = MockHelpers.MockUserManager<DomainUser>();
         _auditRepositoryMock = new Mock<IAuditRepository>();
         _uowMock = new Mock<IUnitOfWork>();
 
         _handler = new UpdateUserHandler(
-            _userRepositoryMock.Object,
+            _userManagerMock.Object,
             _auditRepositoryMock.Object,
             _uowMock.Object
         );
@@ -33,17 +36,20 @@ public class UpdateUserHandlerTests
     {
         // Arrange
         var command = new UpdateUserCommand { Id = 1, Name = "New Name" };
-        var user = new TicketingSystem.Domain.Entities.User { Id = 1, Name = "Old Name", Email = "old@example.com" };
+        var user = new DomainUser { Id = 1, Name = "Old Name", Email = "old@example.com", UserName = "old@example.com" };
 
-        _userRepositoryMock.Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+        _userManagerMock.Setup(m => m.FindByIdAsync("1"))
             .ReturnsAsync(user);
+        
+        _userManagerMock.Setup(m => m.UpdateAsync(user))
+            .ReturnsAsync(IdentityResult.Success);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
 
         // Assert
         user.Name.Should().Be("New Name");
-        _userRepositoryMock.Verify(r => r.UpdateAsync(user, It.IsAny<CancellationToken>()), Times.Once);
+        _userManagerMock.Verify(m => m.UpdateAsync(user), Times.Once);
         _uowMock.Verify(u => u.CommitTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -52,8 +58,8 @@ public class UpdateUserHandlerTests
     {
         // Arrange
         var command = new UpdateUserCommand { Id = 99 };
-        _userRepositoryMock.Setup(r => r.GetByIdAsync(99, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((TicketingSystem.Domain.Entities.User?)null);
+        _userManagerMock.Setup(m => m.FindByIdAsync("99"))
+            .ReturnsAsync((DomainUser?)null);
 
         // Act
         Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);

@@ -1,21 +1,21 @@
+using Microsoft.AspNetCore.Identity;
 using TicketingSystem.Application.Interfaces.persistence;
 using TicketingSystem.Application.Interfaces.Services;
+using DomainUser = TicketingSystem.Domain.Entities.User;
 using TicketingSystem.Domain.Entities;
 
 namespace TicketingSystem.Application.UseCases.User.CreateUser;
 
 public class CreateUserHandler : ICommandHandler<CreateUserCommand, int>
 {
-    private readonly IUserRepository _userRepository;
+    private readonly UserManager<DomainUser> _userManager;
     private readonly IAuditRepository _auditRepository;
-    private readonly IPasswordHasher _passwordHasher;
     private readonly IUnitOfWork _uow;
 
-    public CreateUserHandler(IUserRepository userRepository, IAuditRepository auditRepository, IPasswordHasher passwordHasher, IUnitOfWork uow)
+    public CreateUserHandler(UserManager<DomainUser> userManager, IAuditRepository auditRepository, IUnitOfWork uow)
     {
-        _userRepository = userRepository;
+        _userManager = userManager;
         _auditRepository = auditRepository;
-        _passwordHasher = passwordHasher;
         _uow = uow;
     }
 
@@ -24,18 +24,19 @@ public class CreateUserHandler : ICommandHandler<CreateUserCommand, int>
         await _uow.BeginTransactionAsync(ct);
         try
         {
-            var existingUser = await _userRepository.GetByEmailAsync(command.Email, ct);
-            if (existingUser != null) throw new Exception("User already exists");
-
-            var user = new TicketingSystem.Domain.Entities.User
+            var user = new DomainUser
             {
-                Name = command.Name,
+                UserName = command.Email,
                 Email = command.Email,
-                PasswordHash = _passwordHasher.Hash(command.Password)
+                Name = command.Name
             };
 
-            await _userRepository.AddAsync(user, ct);
-            await _uow.SaveChangesAsync(ct);
+            var result = await _userManager.CreateAsync(user, command.Password);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                throw new Exception($"User creation failed: {errors}");
+            }
 
             await _auditRepository.AddAsync(new AuditLog
             {

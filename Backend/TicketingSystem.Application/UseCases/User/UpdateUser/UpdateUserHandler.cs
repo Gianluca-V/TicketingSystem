@@ -1,18 +1,20 @@
+using Microsoft.AspNetCore.Identity;
 using TicketingSystem.Application.Interfaces.persistence;
 using TicketingSystem.Application.Interfaces.Services;
+using DomainUser = TicketingSystem.Domain.Entities.User;
 using TicketingSystem.Domain.Entities;
 
 namespace TicketingSystem.Application.UseCases.User.UpdateUser;
 
 public class UpdateUserHandler : ICommandHandler<UpdateUserCommand>
 {
-    private readonly IUserRepository _userRepository;
+    private readonly UserManager<DomainUser> _userManager;
     private readonly IAuditRepository _auditRepository;
     private readonly IUnitOfWork _uow;
 
-    public UpdateUserHandler(IUserRepository userRepository, IAuditRepository auditRepository, IUnitOfWork uow)
+    public UpdateUserHandler(UserManager<DomainUser> userManager, IAuditRepository auditRepository, IUnitOfWork uow)
     {
-        _userRepository = userRepository;
+        _userManager = userManager;
         _auditRepository = auditRepository;
         _uow = uow;
     }
@@ -22,14 +24,23 @@ public class UpdateUserHandler : ICommandHandler<UpdateUserCommand>
         await _uow.BeginTransactionAsync(ct);
         try
         {
-            var user = await _userRepository.GetByIdAsync(command.Id, ct);
+            var user = await _userManager.FindByIdAsync(command.Id.ToString());
             if (user == null) throw new Exception("User not found");
 
             if (command.Name != null) user.Name = command.Name;
-            if (command.Email != null) user.Email = command.Email;
-            if (command.Password != null) user.PasswordHash = command.Password; // hash it
+            if (command.Email != null)
+            {
+                user.Email = command.Email;
+                user.UserName = command.Email;
+            }
 
-            await _userRepository.UpdateAsync(user, ct);
+            if (command.Password != null)
+            {
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                await _userManager.ResetPasswordAsync(user, token, command.Password);
+            }
+
+            await _userManager.UpdateAsync(user);
 
             await _auditRepository.AddAsync(new AuditLog
             {

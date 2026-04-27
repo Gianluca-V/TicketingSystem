@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using TicketingSystem.Application.Interfaces.persistence;
@@ -5,7 +7,7 @@ using TicketingSystem.Domain.Entities;
 
 namespace TicketingSystem.Infrastructure.Data;
 
-public class ApplicationDbContext : DbContext, IUnitOfWork
+public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<int>, int>, IUnitOfWork
 {
     private IDbContextTransaction? _currentTransaction;
 
@@ -18,7 +20,6 @@ public class ApplicationDbContext : DbContext, IUnitOfWork
     public DbSet<Seat> Seats => Set<Seat>();
     public DbSet<Reservation> Reservations => Set<Reservation>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
-    public DbSet<User> Users => Set<User>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

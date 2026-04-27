@@ -1,18 +1,20 @@
 using FluentAssertions;
+using Microsoft.AspNetCore.Identity;
 using Moq;
 using TicketingSystem.Application.Interfaces.persistence;
 using TicketingSystem.Application.Interfaces.Services;
 using TicketingSystem.Application.UseCases.User.Login;
 using TicketingSystem.Domain.Entities;
 using TicketingSystem.Domain.Exceptions;
+using TicketingSystem.UnitTests.Helpers;
 using Xunit;
+using DomainUser = TicketingSystem.Domain.Entities.User;
 
 namespace TicketingSystem.UnitTests.UseCases.User;
 
 public class LoginHandlerTests
 {
-    private readonly Mock<IUserRepository> _userRepositoryMock;
-    private readonly Mock<IPasswordHasher> _passwordHasherMock;
+    private readonly Mock<UserManager<DomainUser>> _userManagerMock;
     private readonly Mock<IJwtService> _jwtServiceMock;
     private readonly Mock<IAuditRepository> _auditRepositoryMock;
     private readonly Mock<IUnitOfWork> _uowMock;
@@ -20,15 +22,13 @@ public class LoginHandlerTests
 
     public LoginHandlerTests()
     {
-        _userRepositoryMock = new Mock<IUserRepository>();
-        _passwordHasherMock = new Mock<IPasswordHasher>();
+        _userManagerMock = MockHelpers.MockUserManager<DomainUser>();
         _jwtServiceMock = new Mock<IJwtService>();
         _auditRepositoryMock = new Mock<IAuditRepository>();
         _uowMock = new Mock<IUnitOfWork>();
 
         _handler = new LoginHandler(
-            _userRepositoryMock.Object,
-            _passwordHasherMock.Object,
+            _userManagerMock.Object,
             _jwtServiceMock.Object,
             _auditRepositoryMock.Object,
             _uowMock.Object
@@ -40,18 +40,18 @@ public class LoginHandlerTests
     {
         // Arrange
         var command = new LoginCommand { Email = "test@example.com", Password = "password123" };
-        var user = new TicketingSystem.Domain.Entities.User 
+        var user = new DomainUser 
         { 
             Id = 1, 
-            Email = command.Email, 
-            PasswordHash = "hashed_password" 
+            Email = command.Email,
+            UserName = command.Email
         };
 
-        _userRepositoryMock.Setup(r => r.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
+        _userManagerMock.Setup(m => m.FindByEmailAsync(command.Email))
             .ReturnsAsync(user);
 
-        _passwordHasherMock.Setup(h => h.Verify(command.Password, user.PasswordHash))
-            .Returns(true);
+        _userManagerMock.Setup(m => m.CheckPasswordAsync(user, command.Password))
+            .ReturnsAsync(true);
 
         _jwtServiceMock.Setup(j => j.GenerateToken(user))
             .Returns("fake_jwt_token");
@@ -72,8 +72,8 @@ public class LoginHandlerTests
     {
         // Arrange
         var command = new LoginCommand { Email = "wrong@example.com", Password = "password123" };
-        _userRepositoryMock.Setup(r => r.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((TicketingSystem.Domain.Entities.User?)null);
+        _userManagerMock.Setup(m => m.FindByEmailAsync(command.Email))
+            .ReturnsAsync((DomainUser?)null);
 
         // Act
         Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
@@ -87,13 +87,13 @@ public class LoginHandlerTests
     {
         // Arrange
         var command = new LoginCommand { Email = "test@example.com", Password = "wrong_password" };
-        var user = new TicketingSystem.Domain.Entities.User { Email = command.Email, PasswordHash = "hashed" };
+        var user = new DomainUser { Email = command.Email };
 
-        _userRepositoryMock.Setup(r => r.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
+        _userManagerMock.Setup(m => m.FindByEmailAsync(command.Email))
             .ReturnsAsync(user);
 
-        _passwordHasherMock.Setup(h => h.Verify(command.Password, user.PasswordHash))
-            .Returns(false);
+        _userManagerMock.Setup(m => m.CheckPasswordAsync(user, command.Password))
+            .ReturnsAsync(false);
 
         // Act
         Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);

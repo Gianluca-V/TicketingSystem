@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Identity;
 using TicketingSystem.Application.Interfaces.persistence;
 using TicketingSystem.Application.Interfaces.Services;
+using DomainUser = TicketingSystem.Domain.Entities.User;
 using TicketingSystem.Domain.Entities;
 using TicketingSystem.Domain.Exceptions;
 
@@ -7,21 +9,18 @@ namespace TicketingSystem.Application.UseCases.User.Login;
 
 public class LoginHandler : ICommandHandler<LoginCommand, string>
 {
-    private readonly IUserRepository _userRepository;
-    private readonly IPasswordHasher _passwordHasher;
+    private readonly UserManager<DomainUser> _userManager;
     private readonly IJwtService _jwtService;
     private readonly IAuditRepository _auditRepository;
     private readonly IUnitOfWork _uow;
 
     public LoginHandler(
-        IUserRepository userRepository,
-        IPasswordHasher passwordHasher,
+        UserManager<DomainUser> userManager,
         IJwtService jwtService,
         IAuditRepository auditRepository,
         IUnitOfWork uow)
     {
-        _userRepository = userRepository;
-        _passwordHasher = passwordHasher;
+        _userManager = userManager;
         _jwtService = jwtService;
         _auditRepository = auditRepository;
         _uow = uow;
@@ -29,8 +28,8 @@ public class LoginHandler : ICommandHandler<LoginCommand, string>
 
     public async Task<string> Handle(LoginCommand command, CancellationToken ct)
     {
-        var user = await _userRepository.GetByEmailAsync(command.Email, ct);
-        if (user == null || !_passwordHasher.Verify(command.Password, user.PasswordHash))
+        var user = await _userManager.FindByEmailAsync(command.Email);
+        if (user == null || !await _userManager.CheckPasswordAsync(user, command.Password))
         {
             throw new BusinessException("Invalid credentials");
         }

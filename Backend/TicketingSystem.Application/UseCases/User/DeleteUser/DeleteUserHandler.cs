@@ -1,18 +1,20 @@
+using Microsoft.AspNetCore.Identity;
 using TicketingSystem.Application.Interfaces.persistence;
 using TicketingSystem.Application.Interfaces.Services;
+using DomainUser = TicketingSystem.Domain.Entities.User;
 using TicketingSystem.Domain.Entities;
 
 namespace TicketingSystem.Application.UseCases.User.DeleteUser;
 
 public class DeleteUserHandler : ICommandHandler<DeleteUserCommand>
 {
-    private readonly IUserRepository _userRepository;
+    private readonly UserManager<DomainUser> _userManager;
     private readonly IAuditRepository _auditRepository;
     private readonly IUnitOfWork _uow;
 
-    public DeleteUserHandler(IUserRepository userRepository, IAuditRepository auditRepository, IUnitOfWork uow)
+    public DeleteUserHandler(UserManager<DomainUser> userManager, IAuditRepository auditRepository, IUnitOfWork uow)
     {
-        _userRepository = userRepository;
+        _userManager = userManager;
         _auditRepository = auditRepository;
         _uow = uow;
     }
@@ -22,10 +24,10 @@ public class DeleteUserHandler : ICommandHandler<DeleteUserCommand>
         await _uow.BeginTransactionAsync(ct);
         try
         {
-            var user = await _userRepository.GetByIdAsync(command.Id, ct);
+            var user = await _userManager.FindByIdAsync(command.Id.ToString());
             if (user == null) throw new Exception("User not found");
 
-            await _userRepository.DeleteAsync(command.Id, ct);
+            await _userManager.DeleteAsync(user);
 
             await _auditRepository.AddAsync(new AuditLog
             {

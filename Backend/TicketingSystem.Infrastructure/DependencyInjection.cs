@@ -45,14 +45,6 @@ public static class DependencyInjection
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddHttpContextAccessor();
 
-        // Register CQRS Query Services
-        //services.AddScoped<IEventQueryService, EventQueryService>();
-       // services.AddScoped<ISeatQueryService, SeatQueryService>();
-
-        // Register CQRS Command Services
-       // services.AddScoped<IReservationCommandService, ReservationCommandService>();
-        //services.AddScoped<IPaymentCommandService, PaymentCommandService>();
-
         // Register Background Worker
         services.AddHostedService<ExpiredReservationWorker>();
 

@@ -17,17 +17,20 @@ public class EventsController : ControllerBase
     private readonly ICommandHandler<UpdateEventCommand> _updateEventHandler;
     private readonly ICommandHandler<DeleteEventCommand> _deleteEventHandler;
     private readonly IQueryHandler<GetEventsQuery, IEnumerable<EventDto>> _getEventsHandler;
+    private readonly IQueryHandler<GetEventByIdQuery, EventDto?> _getEventByIdHandler;
 
     public EventsController(
         ICommandHandler<CreateEventCommand, int> createEventHandler,
         ICommandHandler<UpdateEventCommand> updateEventHandler,
         ICommandHandler<DeleteEventCommand> deleteEventHandler,
-        IQueryHandler<GetEventsQuery, IEnumerable<EventDto>> getEventsHandler)
+        IQueryHandler<GetEventsQuery, IEnumerable<EventDto>> getEventsHandler,
+        IQueryHandler<GetEventByIdQuery, EventDto?> getEventByIdHandler)
     {
         _createEventHandler = createEventHandler;
         _updateEventHandler = updateEventHandler;
         _deleteEventHandler = deleteEventHandler;
         _getEventsHandler = getEventsHandler;
+        _getEventByIdHandler = getEventByIdHandler;
     }
 
     /// <summary>
@@ -39,6 +42,22 @@ public class EventsController : ControllerBase
     {
         var events = await _getEventsHandler.Handle(query, cancellationToken);
         return Ok(events);
+    }
+
+    /// <summary>
+    /// Get event by id
+    /// </summary>
+    [HttpGet("{id}")]
+    [ProducesResponseType(typeof(EventDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
+    {
+        var result = await _getEventByIdHandler.Handle(new GetEventByIdQuery { Id = id }, cancellationToken);
+
+        if (result is null)
+            return NotFound();
+
+        return Ok(result);
     }
 
     /// <summary>

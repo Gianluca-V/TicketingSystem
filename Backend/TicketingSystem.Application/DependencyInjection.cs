@@ -42,6 +42,7 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<UpdateEventCommand>, UpdateEventHandler>();
         services.AddScoped<ICommandHandler<DeleteEventCommand>, DeleteEventHandler>();
         services.AddScoped<IQueryHandler<GetEventsQuery, IEnumerable<EventDto>>, GetEventsHandler>();
+        services.AddScoped<IQueryHandler<GetEventByIdQuery, EventDto?>, GetEventByIdHandler>();
 
         // Sector Handlers
         services.AddScoped<ICommandHandler<CreateSectorCommand, int>, CreateSectorHandler>();

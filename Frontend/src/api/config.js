@@ -36,7 +36,7 @@ export const API_CONFIG = {
     PAYMENT:      (reservationId) => `/reservations/${reservationId}/payments`,
 
     // Audit
-    AUDIT_LOGS:   '/audit-logs',
+    AUDIT_LOGS:   '/auditlogs',
   },
 
   /** Reservation hold window in seconds (must match backend TTL) */

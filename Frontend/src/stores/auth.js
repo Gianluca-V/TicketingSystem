@@ -49,6 +49,7 @@ export const useAuthStore = defineStore('auth', () => {
     errorCode.value = null
     try {
       const data    = await authApi.login(email, password)
+      console.log("data",data)
       const payload = _decodeJwt(data.token)
       _persist(data.token, {
         id:      payload.sub ?? payload.nameid ?? payload.userId,
@@ -58,9 +59,7 @@ export const useAuthStore = defineStore('auth', () => {
       })
       return true
     } catch (e) {
-      console.log(e)
       error.value = e.message
-      errorCode.value = e.code || null
       return false
     } finally {
       loading.value = false

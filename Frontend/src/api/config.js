@@ -7,7 +7,8 @@ export const API_CONFIG = {
 
   ENDPOINTS: {
     // Auth
-    LOGIN:        '/auth/tokens',
+    LOGIN:        '/auth/login',
+    REGISTER:     '/auth/register',
 
     // Users
     USERS:        '/users',

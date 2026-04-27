@@ -8,7 +8,7 @@ export const authApi = {
     client.post(E.LOGIN, { email, password }).then((r) => r.data),
 
   register: (payload) =>
-    client.post(E.USERS, payload).then((r) => r.data),
+    client.post(E.REGISTER, payload).then((r) => r.data),
 
   getProfile: (id) =>
     client.get(E.USER(id)).then((r) => r.data),

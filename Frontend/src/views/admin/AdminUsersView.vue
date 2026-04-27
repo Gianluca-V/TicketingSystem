@@ -154,9 +154,14 @@ async function handleSave() {
   try {
     const payload = { name: form.value.name, email: form.value.email }
     if (form.value.password) payload.password = form.value.password
-    const updated = await adminUsersApi.update(editTarget.value.id, payload)
+    await adminUsersApi.update(editTarget.value.id, payload)
+    
+    // Update local state manually since server returns 204
     const idx = users.value.findIndex(u => u.id === editTarget.value.id)
-    if (idx !== -1) users.value[idx] = { ...users.value[idx], ...updated }
+    if (idx !== -1) {
+      users.value[idx] = { ...users.value[idx], name: payload.name, email: payload.email }
+    }
+    
     showForm.value = false
   } catch (e) { formError.value = e.message }
   finally { saving.value = false }

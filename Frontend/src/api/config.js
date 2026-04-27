@@ -30,6 +30,7 @@ export const API_CONFIG = {
     // Reservations
     RESERVE_SEAT: (seatId) => `/seats/${seatId}/reservations`,
     RESERVATION:  (id)     => `/reservations/${id}`,
+    RESERVATIONS: '/reservations',
 
     // Payments
     PAYMENT:      (reservationId) => `/reservations/${reservationId}/payments`,

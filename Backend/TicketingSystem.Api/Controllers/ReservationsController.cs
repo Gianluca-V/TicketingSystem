@@ -77,23 +77,10 @@ public class ReservationsController : ControllerBase
     [HttpGet("reservations")]
     [ProducesResponseType(typeof(IEnumerable<ReservationDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetReservations(
-        [FromQuery] string? userId,
-        [FromQuery] int? seatId,
-        [FromQuery] bool? expired,
-        [FromQuery] int page = 1,
-        [FromQuery] int take = 100,
+        [FromQuery] GetReservationsQuery query,
         CancellationToken cancellationToken = default)
     {
-        var result = await _getReservationsHandler.Handle(
-            new GetReservationsQuery
-            {
-                UserId = userId,
-                SeatId = seatId,
-                Expired = expired,
-                Page = page,
-                Take = take
-            },
-            cancellationToken);
+        var result = await _getReservationsHandler.Handle(query,cancellationToken);
 
         return Ok(result);
     }

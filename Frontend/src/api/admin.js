@@ -77,6 +77,9 @@ export const adminSeatsApi = {
 // ── Reservations (admin) ──────────────────────────────────────────────────────
 export const adminReservationsApi = {
   /** List all reservations, optionally filtered */
+  listAll: (params = {}) =>
+    client.get(E.RESERVATIONS, { params }).then((r) => r.data),
+
   listBySeat: (seatId) =>
     client.get(E.RESERVE_SEAT(seatId)).then((r) => r.data),
 

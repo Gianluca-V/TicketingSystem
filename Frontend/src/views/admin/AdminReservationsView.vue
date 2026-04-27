@@ -130,7 +130,7 @@ async function lookupReservation() {
 async function loadAudit() {
   auditLoading.value = true
   try {
-    const res = await adminAuditApi.list({ Take: 30 })
+    const res = await adminReservationsApi.listAll({ Take: 30 })
     auditLogs.value = Array.isArray(res) ? res : res?.items ?? []
   } catch {
     // Audit endpoint may not be available in all environments

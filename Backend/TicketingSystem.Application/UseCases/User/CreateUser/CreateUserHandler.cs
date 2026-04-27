@@ -3,6 +3,7 @@ using TicketingSystem.Application.Interfaces.persistence;
 using TicketingSystem.Application.Interfaces.Services;
 using DomainUser = TicketingSystem.Domain.Entities.User;
 using TicketingSystem.Domain.Entities;
+using TicketingSystem.Domain.Exceptions;
 
 namespace TicketingSystem.Application.UseCases.User.CreateUser;
 
@@ -21,6 +22,12 @@ public class CreateUserHandler : ICommandHandler<CreateUserCommand, int>
 
     public async Task<int> Handle(CreateUserCommand command, CancellationToken ct)
     {
+        var existingUser = await _userManager.FindByEmailAsync(command.Email);
+        if (existingUser != null)
+        {
+            throw new BusinessException("User already exists");
+        }
+
         await _uow.BeginTransactionAsync(ct);
         try
         {
@@ -35,7 +42,7 @@ public class CreateUserHandler : ICommandHandler<CreateUserCommand, int>
             if (!result.Succeeded)
             {
                 var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-                throw new Exception($"User creation failed: {errors}");
+                throw new BusinessException($"User creation failed: {errors}");
             }
 
             await _auditRepository.AddAsync(new AuditLog
@@ -50,10 +57,15 @@ public class CreateUserHandler : ICommandHandler<CreateUserCommand, int>
             await _uow.CommitTransactionAsync(ct);
             return user.Id;
         }
-        catch
+        catch (BusinessException)
         {
             await _uow.RollbackTransactionAsync(ct);
             throw;
+        }
+        catch (Exception ex)
+        {
+            await _uow.RollbackTransactionAsync(ct);
+            throw new BusinessException("An error occurred during user creation", ex);
         }
     }
 }

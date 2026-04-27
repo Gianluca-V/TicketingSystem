@@ -1,54 +1,51 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TicketingSystem.Application.DTOs;
 using TicketingSystem.Application.Interfaces.Services;
+using TicketingSystem.Application.UseCases.Reservation.GetReservation;
 using TicketingSystem.Application.UseCases.Seat.ReserveSeat;
 
 namespace TicketingSystem.Api.Controllers;
 
 [ApiController]
-[Route("api/v1/seats/{seatId}")]
+[Authorize]
 public class ReservationsController : ControllerBase
 {
     private readonly ICommandHandler<ReserveSeatCommand, ReserveSeatResponse> _reserveSeatHandler;
-    private readonly ILogger<ReservationsController> _logger;
+    private readonly IQueryHandler<GetReservationQuery, ReservationDto?> _getReservationHandler;
 
     public ReservationsController(
         ICommandHandler<ReserveSeatCommand, ReserveSeatResponse> reserveSeatHandler,
-        ILogger<ReservationsController> logger)
+        IQueryHandler<GetReservationQuery, ReservationDto?> getReservationHandler)
     {
         _reserveSeatHandler = reserveSeatHandler;
-        _logger = logger;
+        _getReservationHandler = getReservationHandler;
     }
 
     /// <summary>
-    /// Reserve a seat
+    /// Create a temporary reservation for a specific seat
     /// </summary>
-    [HttpPost("reservations")]
+    [HttpPost("api/v1/seats/{seatId}/reservations")]
     [ProducesResponseType(typeof(ReserveSeatResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<IActionResult> ReserveSeat(
-        int seatId,
-        [FromBody] ReserveSeatCommand command,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> ReserveSeat(int seatId, [FromBody] ReserveSeatCommand command, CancellationToken cancellationToken)
     {
-        if (seatId != command.SeatId)
-        {
-            return BadRequest(new { error = "SeatId mismatch" });
-        }
+        var result = await _reserveSeatHandler.Handle(command with { SeatId = seatId }, cancellationToken);
 
-        if (command.UserId <= 0)
-        {
-            return BadRequest(new { error = "Valid UserId is required" });
-        }
+        return CreatedAtAction(nameof(GetReservation), new { reservationId = result.ReservationId }, result);
+    }
 
-        var result = await _reserveSeatHandler.Handle(command, cancellationToken);
-
-        return CreatedAtAction(
-            actionName: nameof(PaymentsController.GetReservation),
-            controllerName: "Payments",
-            routeValues: new { reservationId = result.ReservationId },
-            value: result);
+    /// <summary>S
+    /// Get details of a specific reservation
+    /// </summary>
+    [HttpGet("api/v1/reservations/{reservationId}")]
+    [ProducesResponseType(typeof(ReservationDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetReservation(Guid reservationId)
+    {
+        var reservation = await _getReservationHandler.Handle(new GetReservationQuery(reservationId), default);
+        if (reservation == null) return NotFound();
+        return Ok(reservation);
     }
 }

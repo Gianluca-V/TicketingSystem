@@ -22,6 +22,7 @@ using TicketingSystem.Application.UseCases.Seat.GetSeats;
 using TicketingSystem.Application.UseCases.Seat.ReserveSeat;
 using TicketingSystem.Application.UseCases.Seat.Handlers;
 using TicketingSystem.Application.UseCases.User.Login;
+using TicketingSystem.Application.UseCases.AuditLogs;
 
 namespace TicketingSystem.Application;
 
@@ -60,6 +61,9 @@ public static class DependencyInjection
 
         // Reservation Handlers
         services.AddScoped<IQueryHandler<GetReservationQuery, ReservationDto?>, GetReservationHandler>();
+
+        // Audit Log Handlers
+        services.AddScoped<IQueryHandler<GetAuditLogsQuery, IEnumerable<AuditLogDto>>, GetAuditLogsHandler>();
 
         return services;
     }

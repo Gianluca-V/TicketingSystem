@@ -16,6 +16,16 @@ public class GetAuditLogsHandler : IQueryHandler<GetAuditLogsQuery, IEnumerable<
 
     public async Task<IEnumerable<AuditLogDto>> Handle(GetAuditLogsQuery query, CancellationToken cancellationToken)
     {
+        if (query.From.HasValue)
+        {
+            query.From = DateTime.SpecifyKind(query.From.Value, DateTimeKind.Utc);
+        }
+
+        if (query.To.HasValue)
+        {
+            query.To = DateTime.SpecifyKind(query.To.Value, DateTimeKind.Utc);
+        }
+
         var filter = new AuditFilter
         {
             UserId = query.UserId?.ToString(),

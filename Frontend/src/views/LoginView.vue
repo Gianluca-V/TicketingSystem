@@ -18,7 +18,7 @@
             ? 'Correo o contraseña incorrectos'
             : 'Ha ocurrido un error. Por favor, intentá nuevamente.' 
       }}-->
-          {{ auth.error }}
+          {{ auth.errorCode }}
       </div>
 
       <form class="auth-form" @submit.prevent="handleSubmit">

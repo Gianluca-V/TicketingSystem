@@ -13,6 +13,7 @@ export const useAuthStore = defineStore('auth', () => {
   const user    = ref(JSON.parse(sessionStorage.getItem('_usr') ?? 'null'))
   const loading = ref(false)
   const error   = ref(null)
+  const errorCode = ref(null)
 
   // ── Getters ────────────────────────────────────────────────────────────────
   const isAuthenticated = computed(() => !!token.value)
@@ -45,6 +46,7 @@ export const useAuthStore = defineStore('auth', () => {
   async function login(email, password) {
     loading.value = true
     error.value   = null
+    errorCode.value = null
     try {
       const data    = await authApi.login(email, password)
       const payload = _decodeJwt(data.token)
@@ -57,6 +59,7 @@ export const useAuthStore = defineStore('auth', () => {
       return true
     } catch (e) {
       error.value = e.message
+      errorCode.value = e.code || null
       return false
     } finally {
       loading.value = false
@@ -71,6 +74,7 @@ export const useAuthStore = defineStore('auth', () => {
       return await login(email, password)
     } catch (e) {
       error.value = e.message
+      errorCode.value = e.code || null
       return false
     } finally {
       loading.value = false

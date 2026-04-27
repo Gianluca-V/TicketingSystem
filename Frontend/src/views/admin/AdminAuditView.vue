@@ -17,7 +17,19 @@
         </div>
         <div class="form-group">
           <label class="form-label">Acción</label>
-          <input v-model.trim="filters.action" class="form-input" type="text" placeholder="Login, Reserve..." />
+
+          <select v-model="filters.action" class="form-input">
+            <option value="">Todas</option>
+            <option value="Reserved">Reserved</option>
+            <option value="PaymentConfirmed">PaymentConfirmed</option>
+            <option value="Released">Released</option>
+            <option value="ConflictAttempt">ConflictAttempt</option>
+            <option value="ExpiredLock">ExpiredLock</option>
+            <option value="Created">Created</option>
+            <option value="Deleted">Deleted</option>
+            <option value="Updated">Updated</option>
+            <option value="Login">Login</option>
+          </select>
         </div>
         <div class="form-group">
           <label class="form-label">Desde</label>

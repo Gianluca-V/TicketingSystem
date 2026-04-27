@@ -63,7 +63,8 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<ProcessPaymentCommand, PaymentResponse>, ProcessPaymentHandler>();
 
         // Reservation Handlers
-        services.AddScoped<IQueryHandler<GetReservationQuery, ReservationDto?>, GetReservationHandler>();
+        services.AddScoped<IQueryHandler<GetReservationByIdQuery, ReservationDto?>, GetReservationByIdHandler>();
+        services.AddScoped<IQueryHandler<GetReservationsQuery, IEnumerable<ReservationDto>>, GetReservationsHandler>();
 
         // Audit Log Handlers
         services.AddScoped<IQueryHandler<GetAuditLogsQuery, IEnumerable<AuditLogDto>>, GetAuditLogsHandler>();

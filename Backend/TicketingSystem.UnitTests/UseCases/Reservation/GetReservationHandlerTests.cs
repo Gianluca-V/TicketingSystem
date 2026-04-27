@@ -11,12 +11,12 @@ namespace TicketingSystem.UnitTests.UseCases.Reservation;
 public class GetReservationHandlerTests
 {
     private readonly Mock<IReservationRepository> _reservationRepositoryMock;
-    private readonly GetReservationHandler _handler;
+    private readonly GetReservationByIdHandler _handler;
 
     public GetReservationHandlerTests()
     {
         _reservationRepositoryMock = new Mock<IReservationRepository>();
-        _handler = new GetReservationHandler(_reservationRepositoryMock.Object);
+        _handler = new GetReservationByIdHandler(_reservationRepositoryMock.Object);
     }
 
     [Fact]
@@ -30,7 +30,7 @@ public class GetReservationHandlerTests
             .ReturnsAsync(reservation);
 
         // Act
-        var result = await _handler.Handle(new GetReservationQuery(id), CancellationToken.None);
+        var result = await _handler.Handle(new GetReservationByIdQuery(id), CancellationToken.None);
 
         // Assert
         result.Should().NotBeNull();
@@ -46,7 +46,7 @@ public class GetReservationHandlerTests
             .ReturnsAsync((TicketingSystem.Domain.Entities.Reservation?)null);
 
         // Act
-        var result = await _handler.Handle(new GetReservationQuery(id), CancellationToken.None);
+        var result = await _handler.Handle(new GetReservationByIdQuery(id), CancellationToken.None);
 
         // Assert
         result.Should().BeNull();

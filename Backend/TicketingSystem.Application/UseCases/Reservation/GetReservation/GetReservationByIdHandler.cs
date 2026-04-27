@@ -4,16 +4,16 @@ using TicketingSystem.Application.Interfaces.Services;
 
 namespace TicketingSystem.Application.UseCases.Reservation.GetReservation;
 
-public class GetReservationHandler : IQueryHandler<GetReservationQuery, ReservationDto?>
+public class GetReservationByIdHandler : IQueryHandler<GetReservationByIdQuery, ReservationDto?>
 {
     private readonly IReservationRepository _reservationRepository;
 
-    public GetReservationHandler(IReservationRepository reservationRepository)
+    public GetReservationByIdHandler(IReservationRepository reservationRepository)
     {
         _reservationRepository = reservationRepository;
     }
 
-    public async Task<ReservationDto?> Handle(GetReservationQuery query, CancellationToken ct)
+    public async Task<ReservationDto?> Handle(GetReservationByIdQuery query, CancellationToken ct)
     {
         var reservation = await _reservationRepository.GetByIdAsync(query.ReservationId, ct);
         if (reservation == null) return null;

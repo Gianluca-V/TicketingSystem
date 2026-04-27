@@ -58,6 +58,7 @@ export const useAuthStore = defineStore('auth', () => {
       })
       return true
     } catch (e) {
+      console.log(e)
       error.value = e.message
       errorCode.value = e.code || null
       return false

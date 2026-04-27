@@ -33,6 +33,8 @@ public class GlobalExceptionMiddleware
 
         context.Response.ContentType = "application/json";
 
+        var isDevelopment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
+
         switch (exception)
         {
             case DbUpdateConcurrencyException:
@@ -40,7 +42,9 @@ public class GlobalExceptionMiddleware
                 await context.Response.WriteAsJsonAsync(new
                 {
                     error = "Concurrent update conflict",
-                    retryAfter = 1000
+                    retryAfter = 1000,
+                    message = isDevelopment ? exception.Message : null,
+                    detail = isDevelopment ? exception.StackTrace : null
                 });
                 break;
 
@@ -64,7 +68,9 @@ public class GlobalExceptionMiddleware
                 context.Response.StatusCode = StatusCodes.Status500InternalServerError;
                 await context.Response.WriteAsJsonAsync(new
                 {
-                    error = "An unexpected error occurred"
+                    error = "An unexpected error occurred",
+                    message = isDevelopment ? exception.Message : null,
+                    detail = isDevelopment ? exception.StackTrace : null
                 });
                 break;
         }

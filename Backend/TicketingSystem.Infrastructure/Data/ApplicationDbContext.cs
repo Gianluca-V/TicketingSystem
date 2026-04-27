@@ -25,6 +25,8 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<int>, i
     {
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder.Entity<User>().ToTable("Users");
+
         modelBuilder.Entity<Seat>()
             .Property(e => e.Version)
             .HasColumnName("xmin")

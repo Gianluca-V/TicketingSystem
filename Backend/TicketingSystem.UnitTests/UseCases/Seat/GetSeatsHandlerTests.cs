@@ -10,15 +10,15 @@ using Xunit;
 
 namespace TicketingSystem.UnitTests.UseCases.Seat;
 
-public class GetSeatsQueryHandlerTests
+public class GetSeatsHandlerTests
 {
     private readonly Mock<ISeatRepository> _seatRepositoryMock;
-    private readonly GetSeatsQueryHandler _handler;
+    private readonly GetSeatsHandler _handler;
 
-    public GetSeatsQueryHandlerTests()
+    public GetSeatsHandlerTests()
     {
         _seatRepositoryMock = new Mock<ISeatRepository>();
-        _handler = new GetSeatsQueryHandler(_seatRepositoryMock.Object);
+        _handler = new GetSeatsHandler(_seatRepositoryMock.Object);
     }
 
     [Fact]

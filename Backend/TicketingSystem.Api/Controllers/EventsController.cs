@@ -69,7 +69,7 @@ public class EventsController : ControllerBase
     public async Task<IActionResult> Create([FromBody] CreateEventCommand command, CancellationToken cancellationToken)
     {
         var eventId = await _createEventHandler.Handle(command, cancellationToken);
-        return CreatedAtAction(nameof(GetEvents), new { id = eventId }, new { Id = eventId });
+        return CreatedAtAction(nameof(GetById), new { id = eventId }, new { Id = eventId });
     }
 
     /// <summary>

@@ -12,11 +12,11 @@ using TicketingSystem.Domain.QueryFilters;
 
 namespace TicketingSystem.Application.UseCases.Seat.Handlers
 {
-    public class GetSeatsQueryHandler : IQueryHandler<GetSeatsQuery, IEnumerable<SeatDto>>
+    public class GetSeatsHandler : IQueryHandler<GetSeatsQuery, IEnumerable<SeatDto>>
     {
         private readonly ISeatRepository _seatRepository;
 
-        public GetSeatsQueryHandler(ISeatRepository seatRepository)
+        public GetSeatsHandler(ISeatRepository seatRepository)
         {
             _seatRepository = seatRepository;
         }

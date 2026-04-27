@@ -17,17 +17,19 @@ public class SectorsController : ControllerBase
     private readonly ICommandHandler<UpdateSectorCommand> _updateSectorHandler;
     private readonly ICommandHandler<DeleteSectorCommand> _deleteSectorHandler;
     private readonly IQueryHandler<GetSectorsQuery, IEnumerable<SectorDto>> _getSectorsHandler;
-
+    private readonly IQueryHandler<GetSectorByIdQuery, SectorDto?> _getSectorByIdHandler;
     public SectorsController(
         ICommandHandler<CreateSectorCommand, int> createSectorHandler,
         ICommandHandler<UpdateSectorCommand> updateSectorHandler,
         ICommandHandler<DeleteSectorCommand> deleteSectorHandler,
-        IQueryHandler<GetSectorsQuery, IEnumerable<SectorDto>> getSectorsHandler)
+        IQueryHandler<GetSectorsQuery, IEnumerable<SectorDto>> getSectorsHandler,
+        IQueryHandler<GetSectorByIdQuery, SectorDto?> getSectorByIdHandler)
     {
         _createSectorHandler = createSectorHandler;
         _updateSectorHandler = updateSectorHandler;
         _deleteSectorHandler = deleteSectorHandler;
         _getSectorsHandler = getSectorsHandler;
+        _getSectorByIdHandler = getSectorByIdHandler;
     }
 
     /// <summary>
@@ -48,6 +50,29 @@ public class SectorsController : ControllerBase
     }
 
     /// <summary>
+    /// Get sector by id for a specific event
+    /// </summary>
+    [HttpGet("{sectorId}")]
+    [ProducesResponseType(typeof(SectorDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetById(int eventId, int sectorId, CancellationToken cancellationToken)
+    {
+        var result = await _getSectorByIdHandler.Handle(
+            new GetSectorByIdQuery
+            {
+                EventId = eventId,
+                SectorId = sectorId
+            },
+            cancellationToken
+        );
+
+        if (result is null)
+            return NotFound();
+
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Create a new sector for an event
     /// </summary>
     [HttpPost]
@@ -57,7 +82,7 @@ public class SectorsController : ControllerBase
     {
         command.EventId = eventId;
         var sectorId = await _createSectorHandler.Handle(command, cancellationToken);
-        return CreatedAtAction(nameof(GetSectors), new { eventId = eventId, id = sectorId }, new { Id = sectorId });
+        return CreatedAtAction(nameof(GetById),new { eventId = eventId, sectorId = sectorId },new { Id = sectorId });
     }
 
     /// <summary>

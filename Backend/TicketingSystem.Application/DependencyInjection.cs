@@ -49,13 +49,15 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<UpdateSectorCommand>, UpdateSectorHandler>();
         services.AddScoped<ICommandHandler<DeleteSectorCommand>, DeleteSectorHandler>();
         services.AddScoped<IQueryHandler<GetSectorsQuery, IEnumerable<SectorDto>>, GetSectorsHandler>();
+        services.AddScoped<IQueryHandler<GetSectorByIdQuery, SectorDto?>, GetSectorByIdHandler>();
 
         // Seat Handlers
         services.AddScoped<ICommandHandler<CreateSeatCommand, int>, CreateSeatHandler>();
         services.AddScoped<ICommandHandler<UpdateSeatCommand>, UpdateSeatHandler>();
         services.AddScoped<ICommandHandler<DeleteSeatCommand>, DeleteSeatHandler>();
-        services.AddScoped<IQueryHandler<GetSeatsQuery, IEnumerable<SeatDto>>, GetSeatsQueryHandler>();
+        services.AddScoped<IQueryHandler<GetSeatsQuery, IEnumerable<SeatDto>>, GetSeatsHandler>();
         services.AddScoped<ICommandHandler<ReserveSeatCommand, ReserveSeatResponse>, ReserveSeatHandler>();
+        services.AddScoped<IQueryHandler<GetSeatByIdQuery, SeatDto?>, GetSeatByIdHandler>();
 
         // Payment Handlers
         services.AddScoped<ICommandHandler<ProcessPaymentCommand, PaymentResponse>, ProcessPaymentHandler>();

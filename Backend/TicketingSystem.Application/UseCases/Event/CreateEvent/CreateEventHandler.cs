@@ -25,7 +25,7 @@ public class CreateEventHandler : ICommandHandler<CreateEventCommand, int>
             var @event = new TicketingSystem.Domain.Entities.Event
             {
                 Name = command.Name,
-                EventDate = command.EventDate,
+                EventDate = command.Date,
                 Venue = command.Venue,
                 Status = command.Status
             };

@@ -35,7 +35,7 @@ public class CreateEventHandlerTests
         var command = new CreateEventCommand
         {
             Name = "Festival",
-            EventDate = DateTime.UtcNow,
+            Date = DateTime.UtcNow,
             Venue = "Stadium",
             Status = "Active"
         };

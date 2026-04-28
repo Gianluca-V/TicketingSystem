@@ -26,7 +26,7 @@ public class UpdateEventHandler : ICommandHandler<UpdateEventCommand>
             if (@event == null) throw new Exception("Event not found");
 
             if (command.Name != null) @event.Name = command.Name;
-            if (command.EventDate.HasValue) @event.EventDate = command.EventDate.Value;
+            if (command.Date.HasValue) @event.EventDate = command.Date.Value;
             if (command.Venue != null) @event.Venue = command.Venue;
             if (command.Status != null) @event.Status = command.Status;
 

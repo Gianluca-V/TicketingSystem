@@ -17,18 +17,11 @@
         </div>
         <div class="form-group">
           <label class="form-label">Acción</label>
-
           <select v-model="filters.action" class="form-input">
             <option value="">Todas</option>
-            <option value="Reserved">Reserved</option>
-            <option value="PaymentConfirmed">PaymentConfirmed</option>
-            <option value="Released">Released</option>
-            <option value="ConflictAttempt">ConflictAttempt</option>
-            <option value="ExpiredLock">ExpiredLock</option>
-            <option value="Created">Created</option>
-            <option value="Deleted">Deleted</option>
-            <option value="Updated">Updated</option>
-            <option value="Login">Login</option>
+            <option v-for="(label, key) in actionMap" :key="key" :value="key">
+              {{ label }}
+            </option>
           </select>
         </div>
         <div class="form-group">
@@ -85,7 +78,9 @@
             <td class="mono date-cell">{{ formatDate(log.occurredAt) }}</td>
             <td class="mono">{{ log.userId }}</td>
             <td>
-              <span class="badge action-badge" :class="actionBadge(log.action)">{{ log.action }}</span>
+              <span class="badge action-badge" :class="actionBadge(log.action)">
+                {{ actionMap[log.action] || log.action }}
+              </span>
             </td>
             <td class="mono resource-type">{{ log.resourceType }}</td>
             <td class="mono">{{ log.resourceId }}</td>
@@ -110,6 +105,18 @@ const filters = ref({
   userId: '', action: '', from: '', to: '',
   page: 1, take: 50,
 })
+
+const actionMap = {
+  Reserved: 'Reserva creada',
+  PaymentConfirmed: 'Pago confirmado',
+  Released: 'Reserva liberada',
+  ConflictAttempt: 'Intento de conflicto',
+  ExpiredLock: 'Bloqueo expirado',
+  Created: 'Recurso creado',
+  Deleted: 'Recurso eliminado',
+  Updated: 'Recurso actualizado',
+  Login: 'Inicio de sesión'
+}
 
 function formatDate(d) {
   if (!d) return '—'

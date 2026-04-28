@@ -47,6 +47,25 @@ public class UpdateEventHandlerTests
     }
 
     [Fact]
+    public async Task Handle_UpdateEventDate_ShouldUpdateEventDate()
+    {
+        // Arrange
+        var newDate = DateTime.Now.AddDays(10);
+        var command = new UpdateEventCommand { Id = 1, Date = newDate };
+        var @event = new TicketingSystem.Domain.Entities.Event { Id = 1, Name = "Festival", EventDate = DateTime.Now };
+
+        _eventRepositoryMock.Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(@event);
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        @event.EventDate.Should().Be(newDate);
+        _eventRepositoryMock.Verify(r => r.UpdateAsync(@event, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task Handle_EventNotFound_ShouldThrowException()
     {
         // Arrange

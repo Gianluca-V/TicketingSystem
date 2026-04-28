@@ -53,7 +53,7 @@ La forma más sencilla de ejecutar toda la pila (API, Frontend y Base de datos) 
 
 ---
 
-## 🛠 Pila Tecnológica
+## 🛠 Stack Tecnológico
 
 ### Backend (.NET 8)
 - **Arquitectura:** Clean Architecture con CQRS (Segregación de Responsabilidades de Consulta y Comando).

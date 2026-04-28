@@ -16,7 +16,7 @@
         <h1 class="page-title">Completar pago</h1>
 
         <!-- Countdown pill -->
-        <div class="countdown-pill" :class="{ urgent: secondsLeft < 120 }">
+        <div class="countdown-pill" :class="{ urgent: res.secondsRemaining < 120 }">
           <span>⏱</span>
           <span>Reserva vence en <strong class="mono">{{ formattedTime }}</strong></span>
         </div>
@@ -128,7 +128,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useReservationStore } from '@/stores/reservation'
 import LoadingSpinner from '@/components/LoadingSpinner.vue'
@@ -137,23 +137,18 @@ const res    = useReservationStore()
 const router = useRouter()
 
 const card = ref({ number: '', expiry: '', cvv: '', name: '' })
-const secondsLeft = ref(res.secondsRemaining)
-let timer
 
-onMounted(() => {
-  timer = setInterval(() => {
-    secondsLeft.value = res.secondsRemaining
-    if (secondsLeft.value <= 0 && res.hasActiveReservation) {
-      res.clear()
-      router.push('/')
-    }
-  }, 1000)
+// Automatically handle expiration
+watch(() => res.secondsRemaining, (val) => {
+  if (val <= 0 && res.hasActiveReservation) {
+    res.clear()
+    router.push('/')
+  }
 })
-onUnmounted(() => clearInterval(timer))
 
 const formattedTime = computed(() => {
-  const m = Math.floor(secondsLeft.value / 60)
-  const s = secondsLeft.value % 60
+  const m = Math.floor(res.secondsRemaining / 60)
+  const s = res.secondsRemaining % 60
   return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
 })
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="banner" :class="{ urgent: secondsLeft < 120 }">
+  <div class="banner" :class="{ urgent: reservation.secondsRemaining < 120 }">
     <div class="container banner-inner">
       <div class="banner-info">
         <span class="banner-icon">⏱</span>
@@ -8,7 +8,7 @@
           <strong class="seat-id">{{ reservation.seat?.seatNumber }}</strong>
           — tu reserva vence en
         </span>
-        <span class="countdown" :class="{ red: secondsLeft < 60 }">
+        <span class="countdown" :class="{ red: reservation.secondsRemaining < 60 }">
           {{ formattedTime }}
         </span>
       </div>
@@ -25,30 +25,24 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useReservationStore } from '@/stores/reservation'
 
 const reservation = useReservationStore()
 const router      = useRouter()
-const secondsLeft = ref(reservation.secondsRemaining)
-let timer
 
-onMounted(() => {
-  timer = setInterval(() => {
-    secondsLeft.value = reservation.secondsRemaining
-    if (reservation.reservationId && secondsLeft.value <= 0) {
-      reservation.clear()
-      router.push('/')
-    }
-  }, 1000)
+// Automatically handle expiration
+watch(() => reservation.secondsRemaining, (val) => {
+  if (reservation.reservationId && val <= 0) {
+    reservation.clear()
+    router.push('/')
+  }
 })
 
-onUnmounted(() => clearInterval(timer))
-
 const formattedTime = computed(() => {
-  const m = Math.floor(secondsLeft.value / 60)
-  const s = secondsLeft.value % 60
+  const m = Math.floor(reservation.secondsRemaining / 60)
+  const s = reservation.secondsRemaining % 60
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 })
 

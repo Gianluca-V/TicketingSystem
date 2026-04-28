@@ -29,7 +29,7 @@
             />
           </svg>
           <div class="ring-inner">
-            <span class="ring-time" :class="{ red: secondsLeft < 60 }">{{ formattedTime }}</span>
+            <span class="ring-time" :class="{ red: res.secondsRemaining < 60 }">{{ formattedTime }}</span>
             <span class="ring-label">restantes</span>
           </div>
         </div>
@@ -65,7 +65,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useReservationStore } from '@/stores/reservation'
 import { API_CONFIG } from '@/api/config'
@@ -76,28 +76,22 @@ const router = useRouter()
 const TTL         = API_CONFIG.RESERVATION_TTL_SECONDS
 const circumference = 2 * Math.PI * 52  // r=52
 
-const secondsLeft = ref(res.secondsRemaining)
-let timer
-
-onMounted(() => {
-  timer = setInterval(() => {
-    secondsLeft.value = res.secondsRemaining
-    if (secondsLeft.value <= 0 && res.hasActiveReservation) {
-      res.clear()
-      router.push('/')
-    }
-  }, 1000)
+// Automatically handle expiration
+watch(() => res.secondsRemaining, (val) => {
+  if (val <= 0 && res.hasActiveReservation) {
+    res.clear()
+    router.push('/')
+  }
 })
-onUnmounted(() => clearInterval(timer))
 
 const formattedTime = computed(() => {
-  const m = Math.floor(secondsLeft.value / 60)
-  const s = secondsLeft.value % 60
+  const m = Math.floor(res.secondsRemaining / 60)
+  const s = res.secondsRemaining % 60
   return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
 })
 
 const dashOffset = computed(() => {
-  const progress = secondsLeft.value / TTL
+  const progress = res.secondsRemaining / TTL
   return circumference * (1 - progress)
 })
 

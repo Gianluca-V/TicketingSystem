@@ -13,12 +13,18 @@ export const useReservationStore = defineStore('reservation', () => {
   const loading       = ref(false)
   const error         = ref(null)
   const paymentDone   = ref(false)
+  const now           = ref(Date.now())
+
+  // Keep 'now' updated every second for reactive countdowns
+  setInterval(() => {
+    now.value = Date.now()
+  }, 1000)
 
   const hasActiveReservation = computed(() => !!reservationId.value && !paymentDone.value)
 
   const secondsRemaining = computed(() => {
     if (!expiresAt.value) return 0
-    return Math.max(0, Math.floor((new Date(expiresAt.value) - Date.now()) / 1000))
+    return Math.max(0, Math.floor((new Date(expiresAt.value) - now.value) / 1000))
   })
 
   async function reserve(seatId, userId, seatSnapshot, sectorSnapshot, eventSnapshot) {

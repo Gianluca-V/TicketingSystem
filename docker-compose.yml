@@ -29,6 +29,9 @@ services:
       - Jwt__Secret=A_Very_Long_And_Secure_Secret_Key_At_Least_32_Chars
       - Jwt__Issuer=TicketingSystem
       - Jwt__Audience=TicketingSystemUsers
+    ports:
+    - "8080:8080"
+    - "5221:5221"
     depends_on:
       postgres:
         condition: service_healthy

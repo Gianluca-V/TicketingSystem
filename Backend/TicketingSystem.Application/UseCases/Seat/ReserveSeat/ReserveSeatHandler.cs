@@ -41,10 +41,10 @@ namespace TicketingSystem.Application.UseCases.Seat.ReserveSeat
                 var seat = await _seatRepository.GetByIdAsync(cmd.SeatId, ct);
 
                 if (seat == null)
-                    throw new Exception("Seat not found");
+                    throw new KeyNotFoundException("Seat not found");
 
                 if (seat.Status != SeatStatus.Available)
-                    throw new Exception("Seat not available");
+                    throw new ConflictException("Seat not available");
 
                 seat.Status = SeatStatus.Reserved;
 
@@ -87,7 +87,7 @@ namespace TicketingSystem.Application.UseCases.Seat.ReserveSeat
                     Details = "Concurrency conflict"
                 }, ct);
 
-                throw new Exception("Seat already taken");
+                throw new ConflictException("Seat already taken");
             }
             catch
             {

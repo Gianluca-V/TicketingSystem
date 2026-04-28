@@ -51,7 +51,8 @@ public class CreateSeatsBulkHandlerTests
         { 
             Id = 1, 
             Name = "S1",
-            EventId = 1
+            EventId = 1,
+            Event = new TicketingSystem.Domain.Entities.Event { Name = "E1" }
         };
 
         _sectorRepositoryMock.Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))

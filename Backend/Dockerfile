@@ -1,7 +1,12 @@
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
+
+# Expose API + Swagger/dev port
 EXPOSE 8080
-ENV ASPNETCORE_URLS=http://+:8080
+EXPOSE 5221
+
+# Listen on both ports
+ENV ASPNETCORE_URLS=http://+:8080;http://+:5221
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
@@ -23,6 +28,9 @@ RUN dotnet publish "TicketingSystem.Api.csproj" -c Release -o /app/publish /p:Us
 
 FROM base AS final
 WORKDIR /app
+
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
 COPY --from=publish /app/publish .
+
 ENTRYPOINT ["dotnet", "TicketingSystem.Api.dll"]

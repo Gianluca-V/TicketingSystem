@@ -2,6 +2,7 @@ using TicketingSystem.Application.DTOs;
 using TicketingSystem.Application.Interfaces.persistence;
 using TicketingSystem.Application.Interfaces.Services;
 using TicketingSystem.Domain.Entities;
+using TicketingSystem.Domain.Exceptions;
 
 namespace TicketingSystem.Application.UseCases.Payment;
 
@@ -29,17 +30,17 @@ public class ProcessPaymentHandler : ICommandHandler<ProcessPaymentCommand, Paym
         var reservation = await _reservationRepository.GetByIdAsync(command.ReservationId, ct);
         if (reservation == null)
         {
-            throw new Exception($"Reservation {command.ReservationId} not found");
+            throw new KeyNotFoundException($"Reservation {command.ReservationId} not found");
         }
 
         if (reservation.PaidAt.HasValue)
         {
-            throw new Exception($"Reservation {command.ReservationId} is already paid");
+            throw new ConflictException($"Reservation {command.ReservationId} is already paid");
         }
 
         if (reservation.IsExpired)
         {
-            throw new Exception($"Reservation {command.ReservationId} has expired");
+            throw new ConflictException($"Reservation {command.ReservationId} has expired");
         }
 
         await _uow.BeginTransactionAsync(ct);
@@ -48,7 +49,7 @@ public class ProcessPaymentHandler : ICommandHandler<ProcessPaymentCommand, Paym
             var seat = await _seatRepository.GetByIdAsync(reservation.SeatId, ct);
             if (seat == null)
             {
-                throw new Exception($"Seat {reservation.SeatId} not found");
+                throw new KeyNotFoundException($"Seat {reservation.SeatId} not found");
             }
 
             seat.Status = SeatStatus.Sold;

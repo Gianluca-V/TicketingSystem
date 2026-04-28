@@ -6,6 +6,7 @@ using TicketingSystem.Application.Interfaces.persistence;
 using TicketingSystem.Application.Interfaces.Services;
 using TicketingSystem.Application.UseCases.Seat.ReserveSeat;
 using TicketingSystem.Domain.Entities;
+using TicketingSystem.Domain.Exceptions;
 using Xunit;
 
 namespace TicketingSystem.UnitTests.UseCases.Seat;
@@ -54,7 +55,22 @@ public class ReserveSeatHandlerTests
     }
 
     [Fact]
-    public async Task Handle_AlreadyReservedSeat_ShouldThrowException()
+    public async Task Handle_SeatNotFound_ShouldThrowKeyNotFoundException()
+    {
+        // Arrange
+        var command = new ReserveSeatCommand(99, 10);
+        _seatRepositoryMock.Setup(r => r.GetByIdAsync(99, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TicketingSystem.Domain.Entities.Seat?)null);
+
+        // Act
+        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<KeyNotFoundException>().WithMessage("Seat not found");
+    }
+
+    [Fact]
+    public async Task Handle_AlreadyReservedSeat_ShouldThrowConflictException()
     {
         // Arrange
         var command = new ReserveSeatCommand(1, 10);
@@ -67,12 +83,12 @@ public class ReserveSeatHandlerTests
         Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await act.Should().ThrowAsync<Exception>().WithMessage("Seat not available");
+        await act.Should().ThrowAsync<ConflictException>().WithMessage("Seat not available");
         _uowMock.Verify(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task Handle_ConcurrencyConflict_ShouldThrowSeatAlreadyTaken()
+    public async Task Handle_ConcurrencyConflict_ShouldThrowConflictException()
     {
         // Arrange
         var command = new ReserveSeatCommand(1, 10);
@@ -88,7 +104,7 @@ public class ReserveSeatHandlerTests
         Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await act.Should().ThrowAsync<Exception>().WithMessage("Seat already taken");
+        await act.Should().ThrowAsync<ConflictException>().WithMessage("Seat already taken");
         _uowMock.Verify(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }

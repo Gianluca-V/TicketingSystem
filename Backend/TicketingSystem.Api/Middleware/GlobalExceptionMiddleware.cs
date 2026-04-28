@@ -38,10 +38,11 @@ public class GlobalExceptionMiddleware
         switch (exception)
         {
             case DbUpdateConcurrencyException:
+            case ConflictException:
                 context.Response.StatusCode = StatusCodes.Status409Conflict;
                 await context.Response.WriteAsJsonAsync(new
                 {
-                    error = "Concurrent update conflict",
+                    error = exception is ConflictException ? exception.Message : "Concurrent update conflict",
                     retryAfter = 1000,
                     message = isDevelopment ? exception.Message : null,
                     detail = isDevelopment ? exception.StackTrace : null

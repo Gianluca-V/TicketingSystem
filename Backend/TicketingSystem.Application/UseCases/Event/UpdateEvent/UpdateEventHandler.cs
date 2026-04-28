@@ -8,12 +8,14 @@ public class UpdateEventHandler : ICommandHandler<UpdateEventCommand>
 {
     private readonly IEventRepository _eventRepository;
     private readonly IAuditRepository _auditRepository;
+    private readonly ICurrentUserService _currentUserService;
     private readonly IUnitOfWork _uow;
 
-    public UpdateEventHandler(IEventRepository eventRepository, IAuditRepository auditRepository, IUnitOfWork uow)
+    public UpdateEventHandler(IEventRepository eventRepository, IAuditRepository auditRepository, ICurrentUserService currentUserService, IUnitOfWork uow)
     {
         _eventRepository = eventRepository;
         _auditRepository = auditRepository;
+        _currentUserService = currentUserService;
         _uow = uow;
     }
 
@@ -26,7 +28,7 @@ public class UpdateEventHandler : ICommandHandler<UpdateEventCommand>
             if (@event == null) throw new Exception("Event not found");
 
             if (command.Name != null) @event.Name = command.Name;
-            if (command.Date.HasValue) @event.EventDate = command.Date.Value;
+            if (command.Date.HasValue) @event.EventDate = DateTime.SpecifyKind(command.Date.Value, DateTimeKind.Utc);
             if (command.Venue != null) @event.Venue = command.Venue;
             if (command.Status != null) @event.Status = command.Status;
 
@@ -38,7 +40,7 @@ public class UpdateEventHandler : ICommandHandler<UpdateEventCommand>
                 ResourceType = "Event",
                 ResourceId = @event.Id.ToString(),
                 Details = $"Event {@event.Id} updated",
-                UserId = 0
+                UserId = _currentUserService.UserId ?? 0
             }, ct);
 
             await _uow.CommitTransactionAsync(ct);

@@ -15,7 +15,7 @@
           v-model.trim="search"
           class="form-input search-input"
           type="search"
-          placeholder="Buscar evento o venue..."
+          placeholder="Buscar evento o dirección..."
           aria-label="Buscar eventos"
         />
       </div>

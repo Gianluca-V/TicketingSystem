@@ -37,7 +37,7 @@
             <th>ID</th>
             <th>Nombre</th>
             <th>Fecha</th>
-            <th>Venue</th>
+            <th>Dirección</th>
             <th>Sectores</th>
             <th>Acciones</th>
           </tr>
@@ -79,7 +79,7 @@
           <input v-model="form.date" class="form-input" type="datetime-local" required />
         </div>
         <div class="form-group">
-          <label class="form-label">Venue *</label>
+          <label class="form-label">Dirección *</label>
           <input v-model.trim="form.venue" class="form-input" type="text" required />
         </div>
         <div v-if="formError" class="alert alert-error" style="margin-top:var(--space-sm)">

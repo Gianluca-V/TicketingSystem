@@ -12,6 +12,7 @@ public class CreateEventHandlerTests
 {
     private readonly Mock<IEventRepository> _eventRepositoryMock;
     private readonly Mock<IAuditRepository> _auditRepositoryMock;
+    private readonly Mock<ICurrentUserService> _currentUserServiceMock;
     private readonly Mock<IUnitOfWork> _uowMock;
     private readonly CreateEventHandler _handler;
 
@@ -19,11 +20,13 @@ public class CreateEventHandlerTests
     {
         _eventRepositoryMock = new Mock<IEventRepository>();
         _auditRepositoryMock = new Mock<IAuditRepository>();
+        _currentUserServiceMock = new Mock<ICurrentUserService>();
         _uowMock = new Mock<IUnitOfWork>();
 
         _handler = new CreateEventHandler(
             _eventRepositoryMock.Object,
             _auditRepositoryMock.Object,
+            _currentUserServiceMock.Object,
             _uowMock.Object
         );
     }

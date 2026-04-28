@@ -160,11 +160,12 @@ const props = defineProps({
   sectorId: { type: String, required: true },
 })
 
-const seats      = ref([])
-const sectorName = ref('')
-const loading    = ref(false)
-const error      = ref(null)
-const search     = ref('')
+const seats       = ref([])
+const sectorName  = ref('')
+const sectorPrice = ref(0)
+const loading     = ref(false)
+const error       = ref(null)
+const search      = ref('')
 const filterStatus = ref('')
 
 const showForm   = ref(false)
@@ -209,6 +210,7 @@ async function load() {
       adminSeatsApi.listBySector(props.eventId, props.sectorId),
     ])
     sectorName.value = sec.name
+    sectorPrice.value = sec.price
     seats.value = Array.isArray(seatList) ? seatList : seatList?.items ?? []
   } catch (e) { error.value = e.message }
   finally { loading.value = false }
@@ -234,13 +236,19 @@ async function handleSave() {
   saving.value = true; formError.value = null
   try {
     if (editTarget.value) {
-      const u = await adminSeatsApi.update(editTarget.value.id, form.value)
+      await adminSeatsApi.update(editTarget.value.id, {
+        ...form.value,
+        eventId: props.eventId,
+        sectorId: props.sectorId
+      })
       const i = seats.value.findIndex(s => s.id === editTarget.value.id)
-      if (i !== -1) seats.value[i] = { ...seats.value[i], ...u }
+      if (i !== -1) seats.value[i] = { ...seats.value[i], ...form.value }
     } else {
       const c = await adminSeatsApi.create({
         ...form.value,
+        eventId: props.eventId,
         sectorId: props.sectorId,
+        price: sectorPrice.value
       })
       seats.value.push(c)
     }
@@ -252,18 +260,20 @@ async function handleSave() {
 async function handleBulkCreate() {
   bulkSaving.value = true; bulkError.value = null
   const pre = bulk.value.prefix ? `${bulk.value.prefix}-` : ''
-  const promises = []
+  const payload = []
   for (let i = 0; i < bulk.value.count; i++) {
     const num = bulk.value.start + i
-    promises.push(adminSeatsApi.create({ seatNumber: `${pre}${num}`, sectorId: props.sectorId, status: 'Available' }))
+    payload.push({ 
+      seatNumber: `${pre}${num}`, 
+      price: sectorPrice.value,
+      rowIdentifier: bulk.value.prefix || ''
+    })
   }
+
   try {
-    const results = await Promise.allSettled(promises)
-    const created = results.filter(r => r.status === 'fulfilled').map(r => r.value)
-    seats.value.push(...created)
-    const failed = results.filter(r => r.status === 'rejected').length
-    if (failed > 0) bulkError.value = `${failed} asientos no se pudieron crear.`
-    else showBulk.value = false
+    await adminSeatsApi.createBulk(props.eventId, props.sectorId, payload)
+    await load() // Reload to get all new seats with IDs
+    showBulk.value = false
   } catch (e) { bulkError.value = e.message }
   finally { bulkSaving.value = false }
 }

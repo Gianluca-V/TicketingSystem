@@ -14,6 +14,7 @@ namespace TicketingSystem.Api.Controllers;
 public class SeatsController : ControllerBase
 {
     private readonly ICommandHandler<CreateSeatCommand, int> _createSeatHandler;
+    private readonly ICommandHandler<CreateSeatsBulkCommand, IEnumerable<int>> _createSeatsBulkHandler;
     private readonly ICommandHandler<UpdateSeatCommand> _updateSeatHandler;
     private readonly ICommandHandler<DeleteSeatCommand> _deleteSeatHandler;
     private readonly IQueryHandler<GetSeatsQuery, IEnumerable<SeatDto>> _getSeatsHandler;
@@ -21,16 +22,43 @@ public class SeatsController : ControllerBase
 
     public SeatsController(
         ICommandHandler<CreateSeatCommand, int> createSeatHandler,
+        ICommandHandler<CreateSeatsBulkCommand, IEnumerable<int>> createSeatsBulkHandler,
         ICommandHandler<UpdateSeatCommand> updateSeatHandler,
         ICommandHandler<DeleteSeatCommand> deleteSeatHandler,
         IQueryHandler<GetSeatsQuery, IEnumerable<SeatDto>> getSeatsHandler,
         IQueryHandler<GetSeatByIdQuery, SeatDto?> getSeatByIdHandler)
     {
         _createSeatHandler = createSeatHandler;
+        _createSeatsBulkHandler = createSeatsBulkHandler;
         _updateSeatHandler = updateSeatHandler;
         _deleteSeatHandler = deleteSeatHandler;
         _getSeatsHandler = getSeatsHandler;
         _getSeatByIdHandler = getSeatByIdHandler;
+    }
+
+    /// <summary>
+    /// Create seats in bulk
+    /// POST /api/v1/events/{eventId}/sectors/{sectorId}/seats/bulk
+    /// </summary>
+    [HttpPost("bulk")]
+    [Authorize]
+    [ProducesResponseType(typeof(IEnumerable<int>), StatusCodes.Status201Created)]
+    public async Task<IActionResult> CreateBulk(
+        int eventId,
+        int sectorId,
+        [FromBody] List<SeatItem> seats,
+        CancellationToken cancellationToken)
+    {
+        var command = new CreateSeatsBulkCommand
+        {
+            EventId = eventId,
+            SectorId = sectorId,
+            Seats = seats
+        };
+
+        var seatIds = await _createSeatsBulkHandler.Handle(command, cancellationToken);
+
+        return Created("", seatIds);
     }
 
     /// <summary>

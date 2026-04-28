@@ -37,7 +37,7 @@ let timer
 onMounted(() => {
   timer = setInterval(() => {
     secondsLeft.value = reservation.secondsRemaining
-    if (secondsLeft.value <= 0) {
+    if (reservation.reservationId && secondsLeft.value <= 0) {
       reservation.clear()
       router.push('/')
     }

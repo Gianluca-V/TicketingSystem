@@ -53,6 +53,7 @@ public static class DependencyInjection
 
         // Seat Handlers
         services.AddScoped<ICommandHandler<CreateSeatCommand, int>, CreateSeatHandler>();
+        services.AddScoped<ICommandHandler<CreateSeatsBulkCommand, IEnumerable<int>>, CreateSeatsBulkHandler>();
         services.AddScoped<ICommandHandler<UpdateSeatCommand>, UpdateSeatHandler>();
         services.AddScoped<ICommandHandler<DeleteSeatCommand>, DeleteSeatHandler>();
         services.AddScoped<IQueryHandler<GetSeatsQuery, IEnumerable<SeatDto>>, GetSeatsHandler>();

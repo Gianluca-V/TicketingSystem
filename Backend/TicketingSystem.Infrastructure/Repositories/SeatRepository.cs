@@ -49,6 +49,11 @@ public class SeatRepository : ISeatRepository
         await _context.Seats.AddAsync(seat, cancellationToken);
     }
 
+    public async Task AddBulkAsync(IEnumerable<Seat> seats, CancellationToken cancellationToken = default)
+    {
+        await _context.Seats.AddRangeAsync(seats, cancellationToken);
+    }
+
     public async Task UpdateAsync(Seat seat, CancellationToken ct)
     {
         _context.Seats.Update(seat);

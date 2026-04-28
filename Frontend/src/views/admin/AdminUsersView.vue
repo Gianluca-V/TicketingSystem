@@ -150,7 +150,21 @@ function openEdit(u) {
 function openDelete(u) { deleteTarget.value = u; showDelete.value = true }
 
 async function handleSave() {
-  saving.value = true; formError.value = null
+  formError.value = null
+  
+  // Validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(form.value.email)) {
+    formError.value = 'Por favor, ingresá un correo electrónico válido.'
+    return
+  }
+
+  if (form.value.password && form.value.password.length < 8) {
+    formError.value = 'La nueva contraseña debe tener al menos 8 caracteres.'
+    return
+  }
+
+  saving.value = true
   try {
     const payload = { name: form.value.name, email: form.value.email }
     if (form.value.password) payload.password = form.value.password

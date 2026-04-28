@@ -1,87 +1,87 @@
-# StageFront Ticketing System ◈
+# Sistema de Ticketing StageFront ◈
 
-A comprehensive ticketing and event management system designed for high-performance seat reservations and administrative control. This platform allows users to browse events, reserve seats with real-time expiration, and simulate payments, while providing administrators with robust tools for event orchestration and system auditing.
+Un sistema integral de ticketing y gestión de eventos diseñado para reservas de asientos de alto rendimiento y control administrativo. Esta plataforma permite a los usuarios explorar eventos, reservar asientos con expiración en tiempo real y simular pagos, mientras proporciona a los administradores herramientas robustas para la orquestación de eventos y auditoría del sistema.
 
-### 🌐 Hosted Version
-Experience the live application at: **[https://softtp1.vespelabs.com/](https://softtp1.vespelabs.com/)**
-
----
-
-## ✨ Key Features
-
-### 🎫 For Users
-- **Live Event Catalog:** Browse upcoming events with venue and status information.
-- **Interactive Seat Selection:** Visual seat grid with real-time availability.
-- **Smart Reservation System:** Secure a seat for 10 minutes with a high-precision, second-by-second countdown.
-- **Secure Payment Simulation:** Integrated payment flow with automatic seat release upon expiration or manual cancellation.
-- **User Profiles:** Manage personal information and view reservation history.
-
-### 🛠 For Administrators
-- **Comprehensive Dashboard:** Overview of system activity and resource status.
-- **Event & Sector Management:** Full CRUD operations for events and their respective sectors (prices, capacity, etc.).
-- **Optimized Seat Management:** 
-    - **Bulk Upload:** Create hundreds of seats in a single operation via the optimized bulk endpoint.
-    - **Status Control:** Manually override seat statuses (Available, Reserved, Sold).
-- **Audit Logs:** Complete traceability of system actions (Logins, Creations, Updates, Conflicts, Expirations) with human-readable descriptions.
-- **User Administration:** Manage accounts, reset passwords, and monitor activity.
+### 🌐 Versión Alojada
+Experimenta la aplicación en vivo en: **[https://softtp1.vespelabs.com/](https://softtp1.vespelabs.com/)**
 
 ---
 
-## 🚀 Getting Started
+## ✨ Características Principales
 
-### Prerequisites
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (Recommended)
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) (For manual backend execution)
-- [Node.js 18+](https://nodejs.org/) (For manual frontend execution)
+### 🎫 Para Usuarios
+- **Catálogo de Eventos en Vivo:** Explora eventos próximos con información de sede y estado.
+- **Selección Interactiva de Asientos:** Cuadrícula visual de asientos con disponibilidad en tiempo real.
+- **Sistema Inteligente de Reservas:** Asegura un asiento durante 10 minutos con una cuenta regresiva de alta precisión, segundo a segundo.
+- **Simulación de Pago Seguro:** Flujo de pago integrado con liberación automática del asiento al expirar o mediante cancelación manual.
+- **Perfiles de Usuario:** Gestiona información personal y visualiza el historial de reservas.
 
-### 🐳 Running with Docker (Preferred)
-The easiest way to run the entire stack (API, Frontend, and Database) is using Docker Compose:
+### 🛠 Para Administradores
+- **Panel de Control Integral:** Vista general de la actividad del sistema y estado de los recursos.
+- **Gestión de Eventos y Sectores:** Operaciones CRUD completas para eventos y sus respectivos sectores (precios, capacidad, etc.).
+- **Gestión Optimizada de Asientos:** 
+    - **Carga Masiva:** Crea cientos de asientos en una sola operación mediante el endpoint optimizado de carga masiva.
+    - **Control de Estado:** Anula manualmente los estados de los asientos (Disponible, Reservado, Vendido).
+- **Registros de Auditoría:** Trazabilidad completa de las acciones del sistema (Inicios de sesión, Creaciones, Actualizaciones, Conflictos, Expiraciones) con descripciones legibles para humanos.
+- **Administración de Usuarios:** Gestiona cuentas, restablece contraseñas y monitorea la actividad.
 
-1. Clone the repository:
+---
+
+## 🚀 Primeros Pasos
+
+### Requisitos Previos
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (Recomendado)
+- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) (Para ejecución manual del backend)
+- [Node.js 18+](https://nodejs.org/) (Para ejecución manual del frontend)
+
+### 🐳 Ejecución con Docker (Preferido)
+La forma más sencilla de ejecutar toda la pila (API, Frontend y Base de datos) es usando Docker Compose:
+
+1. Clona el repositorio:
    ```bash
    git clone https://github.com/your-repo/ticketing-system.git
    cd ticketing-system
    ```
-2. Launch the services:
+2. Inicia los servicios:
    ```bash
    docker-compose up --build
    ```
-3. Access the application:
+3. Accede a la aplicación:
    - **Frontend:** [http://localhost](http://localhost)
    - **API Swagger:** [http://localhost:8080/swagger](http://localhost:8080/swagger)
    - **PostgreSQL:** `localhost:5433`
 
 ---
 
-## 🛠 Technical Stack
+## 🛠 Pila Tecnológica
 
 ### Backend (.NET 8)
-- **Architecture:** Clean Architecture with CQRS (Command/Query Responsibility Segregation).
-- **Database:** PostgreSQL with Entity Framework Core.
-- **Security:** JWT Authentication and ASP.NET Core Identity.
-- **Resilience:** Background workers for expired reservation cleanup.
-- **Validation:** Strong status-code based error handling (Conflict 409, NotFound 404).
+- **Arquitectura:** Clean Architecture con CQRS (Segregación de Responsabilidades de Consulta y Comando).
+- **Base de Datos:** PostgreSQL con Entity Framework Core.
+- **Seguridad:** Autenticación JWT y ASP.NET Core Identity.
+- **Resiliencia:** Trabajadores en segundo plano para limpieza de reservas expiradas.
+- **Validación:** Manejo robusto de errores basado en códigos de estado (Conflict 409, NotFound 404).
 
 ### Frontend (Vue 3)
-- **Framework:** Vue 3 with Composition API.
-- **State Management:** Pinia (Reactive stores for Auth and Reservations).
-- **Routing:** Vue Router.
-- **Styling:** Modern Vanilla CSS with variables for easy theming.
-- **API Client:** Axios with centralized status-based error handling.
+- **Framework:** Vue 3 con Composition API.
+- **Gestión de Estado:** Pinia (Stores reactivos para Autenticación y Reservas).
+- **Enrutamiento:** Vue Router.
+- **Estilos:** CSS Vanilla moderno con variables para facilitar la personalización de temas.
+- **Cliente API:** Axios con manejo centralizado de errores basado en estado.
 
 ---
 
-## 📈 System Architecture
-The system is built on a distributed architecture:
-- **Client Layer:** Single Page Application (SPA) communicating via REST API.
-- **Application Layer:** Handles business logic through specialized Handlers.
-- **Persistence Layer:** Uses the Unit of Work and Repository patterns to ensure data integrity and transaction safety.
-- **Audit System:** Every sensitive operation triggers an audit log entry for security and monitoring.
+## 📈 Arquitectura del Sistema
+El sistema está construido sobre una arquitectura distribuida:
+- **Capa de Cliente:** Aplicación de Página Única (SPA) que se comunica mediante API REST.
+- **Capa de Aplicación:** Gestiona la lógica de negocio a través de Handlers especializados.
+- **Capa de Persistencia:** Utiliza los patrones Unit of Work y Repository para garantizar la integridad de los datos y la seguridad transaccional.
+- **Sistema de Auditoría:** Cada operación sensible genera una entrada en el registro de auditoría para seguridad y monitoreo.
 
 ---
 
-## 📝 Development Notes
-To run services separately during development:
+## 📝 Notas de Desarrollo
+Para ejecutar los servicios por separado durante el desarrollo:
 
 **Backend:**
 ```bash
@@ -96,4 +96,4 @@ npm install
 npm run dev
 ```
 
-Developed as part of the Software Project course. 2026.
+Desarrollado como parte del curso de Proyecto de Software. 2026.

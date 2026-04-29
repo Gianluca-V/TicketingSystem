@@ -51,24 +51,24 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { adminEventsApi, adminUsersApi } from '@/api/admin'
-
-const counts = ref({ events: '—', users: '—', reservations: '—' })
-const loading = ref(true)
+import { adminEventsApi, adminUsersApi, adminReservationsApi, adminAuditApi } from '@/api/admin'
 
 const stats = ref([
   { label: 'Eventos',     icon: '◆', value: '—', to: '/admin/events',       loading: true },
   { label: 'Usuarios',    icon: '◎', value: '—', to: '/admin/users',        loading: true },
   { label: 'Reservas',    icon: '◇', value: '—', to: '/admin/reservations', loading: true },
-  { label: 'Auditoría',   icon: '≡', value: '—', to: '/admin/audit',        loading: false },
+  { label: 'Auditoría',   icon: '≡', value: '—', to: '/admin/audit',        loading: true },
 ])
 
 onMounted(async () => {
   try {
-    const [events, users] = await Promise.allSettled([
+    const [events, users, reservations, audit] = await Promise.allSettled([
       adminEventsApi.list(),
       adminUsersApi.list(),
+      adminReservationsApi.listAll(),
+      adminAuditApi.list(),
     ])
+    
     if (events.status === 'fulfilled') {
       const list = Array.isArray(events.value) ? events.value : events.value?.items ?? []
       stats.value[0].value = list.length
@@ -77,7 +77,14 @@ onMounted(async () => {
       const list = Array.isArray(users.value) ? users.value : users.value?.items ?? []
       stats.value[1].value = list.length
     }
-    stats.value[2].value = '—'
+    if (reservations.status === 'fulfilled') {
+      const list = Array.isArray(reservations.value) ? reservations.value : reservations.value?.items ?? []
+      stats.value[2].value = list.length
+    }
+    if (audit.status === 'fulfilled') {
+      const list = Array.isArray(audit.value) ? audit.value : audit.value?.items ?? []
+      stats.value[3].value = list.length
+    }
   } finally {
     stats.value.forEach(s => s.loading = false)
   }

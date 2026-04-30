@@ -121,7 +121,9 @@ async function load() {
       seatsApi.listBySector(props.eventId, props.sectorId),
     ])
     sector.value = sec
-    seats.value  = seatList
+    seats.value  = seatList.sort((a, b) => 
+      a.seatNumber.localeCompare(b.seatNumber, undefined, { numeric: true })
+    )
   } catch (e) {
     error.value = e.message
   } finally {

@@ -44,7 +44,7 @@
 </template>
 
 <script setup>
-defineProps({
+const props = defineProps({
   seats:    { type: Array,  required: true },
   selected: { type: Object, default: null },
 })
@@ -53,17 +53,14 @@ defineEmits(['select'])
 
 function getSeatClass(seat) {
   const base = seat.status?.toLowerCase() ?? 'available'
+  const isSelected = props.selected && seat.id === props.selected.id
+
   return {
     available: base === 'available',
     reserved:  base === 'reserved',
     sold:      base === 'sold' || base === 'confirmed',
-    selected:  false, // overridden below
+    'selected-seat': isSelected,
   }
-}
-
-// Override selected – can't do it in getSeatClass easily with prop reactivity
-function getSeatClassFull(seat) {
-  // handled in template via :class binding above + separate watcher
 }
 
 function isSelectable(seat) {

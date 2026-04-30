@@ -34,7 +34,8 @@ public class SeatRepository : ISeatRepository
             query = query.Where(s => sectorIds.Contains(s.SectorId));
         }
 
-        query = query.ApplyPaging(filter.Page, filter.Take);
+        query = query.OrderBy(s => s.SeatNumber)
+                     .ApplyPaging(filter.Page, filter.Take);
 
         return await query.ToListAsync(cancellationToken);
     }

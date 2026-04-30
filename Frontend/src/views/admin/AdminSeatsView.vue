@@ -211,7 +211,10 @@ async function load() {
     ])
     sectorName.value = sec.name
     sectorPrice.value = sec.price
-    seats.value = Array.isArray(seatList) ? seatList : seatList?.items ?? []
+    const rawSeats = Array.isArray(seatList) ? seatList : seatList?.items ?? []
+    seats.value = rawSeats.sort((a, b) => 
+      a.seatNumber.localeCompare(b.seatNumber, undefined, { numeric: true })
+    )
   } catch (e) { error.value = e.message }
   finally { loading.value = false }
 }

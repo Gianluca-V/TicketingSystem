@@ -14,6 +14,7 @@ namespace TicketingSystem.Api.Controllers;
 public class SeatsController : ControllerBase
 {
     private readonly ICommandHandler<CreateSeatCommand, int> _createSeatHandler;
+    private readonly ICommandHandler<CreateSeatsBulkCommand, IEnumerable<int>> _createSeatsBulkHandler;
     private readonly ICommandHandler<DeleteSeatCommand> _deleteSeatHandler;
     private readonly ICommandHandler<UpdateSeatCommand> _updateSeatHandler;
     private readonly IQueryHandler<GetSeatsQuery, IEnumerable<SeatDto>> _getSeatsHandler;
@@ -21,16 +22,27 @@ public class SeatsController : ControllerBase
 
     public SeatsController(
         ICommandHandler<CreateSeatCommand, int> createSeatHandler,
+        ICommandHandler<CreateSeatsBulkCommand, IEnumerable<int>> createSeatsBulkHandler,
         ICommandHandler<DeleteSeatCommand> deleteSeatHandler,
         ICommandHandler<UpdateSeatCommand> updateSeatHandler,
         IQueryHandler<GetSeatsQuery, IEnumerable<SeatDto>> getSeatsHandler,
         IQueryHandler<GetSeatByIdQuery, SeatDto?> getSeatByIdHandler)
     {
         _createSeatHandler = createSeatHandler;
+        _createSeatsBulkHandler = createSeatsBulkHandler;
         _deleteSeatHandler = deleteSeatHandler;
         _updateSeatHandler = updateSeatHandler;
         _getSeatsHandler = getSeatsHandler;
         _getSeatByIdHandler = getSeatByIdHandler;
+    }
+
+    [HttpPost("bulk")]
+    public async Task<IActionResult> CreateBulk(int eventId, int sectorId, [FromBody] CreateSeatsBulkCommand command, CancellationToken ct)
+    {
+        command.EventId = eventId;
+        command.SectorId = sectorId;
+        var ids = await _createSeatsBulkHandler.Handle(command, ct);
+        return Ok(ids);
     }
 
     [HttpPost]

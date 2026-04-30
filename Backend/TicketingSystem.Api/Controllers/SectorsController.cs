@@ -14,17 +14,20 @@ namespace TicketingSystem.Api.Controllers;
 public class SectorsController : ControllerBase
 {
     private readonly ICommandHandler<CreateSectorCommand, int> _createSectorHandler;
+    private readonly ICommandHandler<DeleteSectorCommand> _deleteSectorHandler;
     private readonly ICommandHandler<UpdateSectorCommand> _updateSectorHandler;
     private readonly IQueryHandler<GetSectorsQuery, IEnumerable<SectorDto>> _getSectorsHandler;
     private readonly IQueryHandler<GetSectorByIdQuery, SectorDto?> _getSectorByIdHandler;
 
     public SectorsController(
         ICommandHandler<CreateSectorCommand, int> createSectorHandler,
+        ICommandHandler<DeleteSectorCommand> deleteSectorHandler,
         ICommandHandler<UpdateSectorCommand> updateSectorHandler,
         IQueryHandler<GetSectorsQuery, IEnumerable<SectorDto>> getSectorsHandler,
         IQueryHandler<GetSectorByIdQuery, SectorDto?> getSectorByIdHandler)
     {
         _createSectorHandler = createSectorHandler;
+        _deleteSectorHandler = deleteSectorHandler;
         _updateSectorHandler = updateSectorHandler;
         _getSectorsHandler = getSectorsHandler;
         _getSectorByIdHandler = getSectorByIdHandler;
@@ -75,6 +78,13 @@ public class SectorsController : ControllerBase
     {
         command.Id = id;
         await _updateSectorHandler.Handle(command, ct);
+        return NoContent();
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id, CancellationToken ct)
+    {
+        await _deleteSectorHandler.Handle(new DeleteSectorCommand { Id = id }, ct);
         return NoContent();
     }
 }

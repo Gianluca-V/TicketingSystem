@@ -13,5 +13,20 @@ namespace TicketingSystem.Api.Controllers;
 [Route("api/v1/events/{eventId}/[controller]")]
 public class SectorsController : ControllerBase
 {
-    
+    private readonly IQueryHandler<GetSectorsQuery, IEnumerable<SectorDto>> _getSectorsHandler;
+
+    public SectorsController(
+        IQueryHandler<GetSectorsQuery, IEnumerable<SectorDto>> getSectorsHandler)
+    {
+        _getSectorsHandler = getSectorsHandler;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetSectors(int eventId, [FromQuery] GetSectorsQuery query, CancellationToken ct)
+    {
+        query.EventId = eventId;
+
+        var sectors = await _getSectorsHandler.Handle(query, ct);
+        return Ok(sectors);
+    }
 }

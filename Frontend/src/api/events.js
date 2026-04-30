@@ -24,8 +24,8 @@ export const sectorsApi = {
 // ── Seats ─────────────────────────────────────────────────────────────────────
 export const seatsApi = {
   listBySector: (eventId, sectorId) =>
-    client.get(E.SEATS_BY_SECTOR(eventId, sectorId)).then((r) => r.data),
+    client.get(E.SEATS(eventId, sectorId)).then((r) => r.data),
 
-  get: (id) =>
-    client.get(E.SEAT(id)).then((r) => r.data),
+  get: (eventId, sectorId, id) =>
+    client.get(E.SEAT(eventId, sectorId, id)).then((r) => r.data),
 }

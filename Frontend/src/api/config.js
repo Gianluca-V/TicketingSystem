@@ -24,6 +24,7 @@ export const API_CONFIG = {
 
     // Seats
     SEATS_BY_SECTOR: (eventId, sectorId) => `/events/${eventId}/sectors/${sectorId}/seats`,
+    SEAT_BY_SECTOR: (eventId, sectorId, id) => `/events/${eventId}/sectors/${sectorId}/seats/${id}`,
     SEATS:        '/seats',
     SEAT:         (id)  => `/seats/${id}`,
 

@@ -236,10 +236,8 @@ async function handleSave() {
   saving.value = true; formError.value = null
   try {
     if (editTarget.value) {
-      await adminSeatsApi.update(editTarget.value.id, {
-        ...form.value,
-        eventId: props.eventId,
-        sectorId: props.sectorId
+      await adminSeatsApi.update(props.eventId, props.sectorId, editTarget.value.id, {
+        ...form.value
       })
       const i = seats.value.findIndex(s => s.id === editTarget.value.id)
       if (i !== -1) seats.value[i] = { ...seats.value[i], ...form.value }
@@ -279,7 +277,7 @@ async function handleBulkCreate() {
 async function handleDelete() {
   deleting.value = true
   try {
-    await adminSeatsApi.delete(deleteTarget.value.id)
+    await adminSeatsApi.delete(props.eventId, props.sectorId, deleteTarget.value.id)
     seats.value = seats.value.filter(s => s.id !== deleteTarget.value.id)
     showDelete.value = false
   } catch (e) { error.value = e.message }

@@ -14,15 +14,18 @@ namespace TicketingSystem.Api.Controllers;
 public class SeatsController : ControllerBase
 {
     private readonly ICommandHandler<CreateSeatCommand, int> _createSeatHandler;
+    private readonly ICommandHandler<DeleteSeatCommand> _deleteSeatHandler;
     private readonly IQueryHandler<GetSeatsQuery, IEnumerable<SeatDto>> _getSeatsHandler;
     private readonly IQueryHandler<GetSeatByIdQuery, SeatDto?> _getSeatByIdHandler;
 
     public SeatsController(
         ICommandHandler<CreateSeatCommand, int> createSeatHandler,
+        ICommandHandler<DeleteSeatCommand> deleteSeatHandler,
         IQueryHandler<GetSeatsQuery, IEnumerable<SeatDto>> getSeatsHandler,
         IQueryHandler<GetSeatByIdQuery, SeatDto?> getSeatByIdHandler)
     {
         _createSeatHandler = createSeatHandler;
+        _deleteSeatHandler = deleteSeatHandler;
         _getSeatsHandler = getSeatsHandler;
         _getSeatByIdHandler = getSeatByIdHandler;
     }
@@ -68,5 +71,12 @@ public class SeatsController : ControllerBase
             return NotFound();
 
         return Ok(seatDto);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id, CancellationToken ct)
+    {
+        await _deleteSeatHandler.Handle(new DeleteSeatCommand { Id = id }, ct);
+        return NoContent();
     }
 }

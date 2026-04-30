@@ -70,11 +70,11 @@ export const adminSeatsApi = {
   createBulk: (eventId, sectorId, seats) =>
     client.post(`${E.SEATS_BY_SECTOR(eventId, sectorId)}/bulk`, seats).then((r) => r.data),
 
-  update: (id, payload) =>
-    client.put(E.SEAT(id), payload).then((r) => r.data),
+  update: (eventId, sectorId, id, payload) =>
+    client.put(E.SEAT_BY_SECTOR(eventId, sectorId, id), payload).then((r) => r.data),
 
-  delete: (id) =>
-    client.delete(E.SEAT(id)).then((r) => r.data),
+  delete: (eventId, sectorId, id) =>
+    client.delete(E.SEAT_BY_SECTOR(eventId, sectorId, id)).then((r) => r.data),
 }
 
 // ── Reservations (admin) ──────────────────────────────────────────────────────

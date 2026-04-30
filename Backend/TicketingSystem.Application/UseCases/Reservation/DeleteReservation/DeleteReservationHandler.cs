@@ -54,6 +54,8 @@ public class DeleteReservationHandler : ICommandHandler<DeleteReservationCommand
             await _reservationRepository.DeleteAsync(reservation, ct);
             await _uow.CommitTransactionAsync(ct);
             await _cacheService.RemoveByPrefixAsync("Reservations:List", ct);
+            await _cacheService.RemoveByPrefixAsync("AuditLogs:List", ct);
+            await _cacheService.RemoveByPrefixAsync("Seats:List", ct);
         }
         catch
         {

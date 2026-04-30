@@ -13,17 +13,20 @@ namespace TicketingSystem.Api.Controllers;
 [Route("api/v1/[controller]")]
 public class EventsController : ControllerBase
 {
+    private readonly ICommandHandler<CreateEventCommand, int> _createEventHandler;
     private readonly ICommandHandler<DeleteEventCommand> _deleteEventHandler;
     private readonly ICommandHandler<UpdateEventCommand> _updateEventHandler;
     private readonly IQueryHandler<GetEventsQuery, IEnumerable<EventDto>> _getEventsHandler;
     private readonly IQueryHandler<GetEventByIdQuery, EventDto?> _getEventByIdHandler;
 
     public EventsController(
+        ICommandHandler<CreateEventCommand, int> createEventHandler,
         ICommandHandler<DeleteEventCommand> deleteEventHandler,
         ICommandHandler<UpdateEventCommand> updateEventHandler,
         IQueryHandler<GetEventsQuery, IEnumerable<EventDto>> getEventsHandler,
         IQueryHandler<GetEventByIdQuery, EventDto?> getEventByIdHandler)
     {
+        _createEventHandler = createEventHandler;
         _deleteEventHandler = deleteEventHandler;
         _updateEventHandler = updateEventHandler;
         _getEventsHandler = getEventsHandler;
@@ -35,6 +38,13 @@ public class EventsController : ControllerBase
     {
         var events = await _getEventsHandler.Handle(query, ct);
         return Ok(events);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] CreateEventCommand command, CancellationToken ct)
+    {
+        var eventId = await _createEventHandler.Handle(command, ct);
+        return CreatedAtAction(nameof(GetEventById), new { id = eventId }, new { Id = eventId });
     }
 
     [HttpGet("{id}")]

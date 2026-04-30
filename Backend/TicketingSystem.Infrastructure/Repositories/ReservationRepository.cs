@@ -35,10 +35,11 @@ public class ReservationRepository : IReservationRepository
 
         if (filter.IsActive.HasValue)
         {
+            var now = DateTime.UtcNow;
             if (filter.IsActive.Value)
-                query = query.Where(r => !r.IsExpired);
+                query = query.Where(r => r.PaidAt.HasValue || r.ExpiresAt > now);
             else
-                query = query.Where(r => r.IsExpired);
+                query = query.Where(r => !r.PaidAt.HasValue && r.ExpiresAt <= now);
         }
 
         query = query.ApplyPaging(filter.Page, filter.Take);

@@ -13,5 +13,18 @@ namespace TicketingSystem.Api.Controllers;
 [Route("api/v1/[controller]")]
 public class EventsController : ControllerBase
 {
-    
+    private readonly IQueryHandler<GetEventsQuery, IEnumerable<EventDto>> _getEventsHandler;
+
+    public EventsController(
+        IQueryHandler<GetEventsQuery, IEnumerable<EventDto>> getEventsHandler)
+    {
+        _getEventsHandler = getEventsHandler;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetEvents([FromQuery] GetEventsQuery query, CancellationToken ct)
+    {
+        var events = await _getEventsHandler.Handle(query, ct);
+        return Ok(events);
+    }
 }

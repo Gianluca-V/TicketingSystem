@@ -13,15 +13,34 @@ namespace TicketingSystem.Api.Controllers;
 [Route("api/v1/events/{eventId}/[controller]")]
 public class SectorsController : ControllerBase
 {
+    private readonly ICommandHandler<CreateSectorCommand, int> _createSectorHandler;
     private readonly IQueryHandler<GetSectorsQuery, IEnumerable<SectorDto>> _getSectorsHandler;
     private readonly IQueryHandler<GetSectorByIdQuery, SectorDto?> _getSectorByIdHandler;
 
     public SectorsController(
+        ICommandHandler<CreateSectorCommand, int> createSectorHandler,
         IQueryHandler<GetSectorsQuery, IEnumerable<SectorDto>> getSectorsHandler,
         IQueryHandler<GetSectorByIdQuery, SectorDto?> getSectorByIdHandler)
     {
+        _createSectorHandler = createSectorHandler;
         _getSectorsHandler = getSectorsHandler;
         _getSectorByIdHandler = getSectorByIdHandler;
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Create(int eventId, [FromBody] CreateSectorCommand command, CancellationToken ct)
+    {
+        command.EventId = eventId;
+        var sectorId = await _createSectorHandler.Handle(command, ct);
+
+        return CreatedAtAction(nameof(GetSectorById), new { eventId, id = sectorId }, new SectorDto(
+            sectorId,
+            command.EventId,
+            string.Empty,
+            command.Name,
+            command.Price,
+            command.Capacity
+        ));
     }
 
     [HttpGet]

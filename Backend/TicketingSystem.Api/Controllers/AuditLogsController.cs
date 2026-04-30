@@ -11,21 +11,5 @@ namespace TicketingSystem.Api.Controllers;
 [Authorize]
 public class AuditLogsController : ControllerBase
 {
-    private readonly IQueryHandler<GetAuditLogsQuery, IEnumerable<AuditLogDto>> _getAuditLogsHandler;
-
-    public AuditLogsController(IQueryHandler<GetAuditLogsQuery, IEnumerable<AuditLogDto>> getAuditLogsHandler)
-    {
-        _getAuditLogsHandler = getAuditLogsHandler;
-    }
-
-    /// <summary>
-    /// List audit logs (Admin)
-    /// </summary>
-    [HttpGet]
-    [ProducesResponseType(typeof(IEnumerable<AuditLogDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAuditLogs([FromQuery] GetAuditLogsQuery query, CancellationToken cancellationToken)
-    {
-        var logs = await _getAuditLogsHandler.Handle(query, cancellationToken);
-        return Ok(logs);
-    }
+   
 }

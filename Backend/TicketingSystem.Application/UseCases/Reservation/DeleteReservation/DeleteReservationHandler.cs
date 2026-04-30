@@ -10,17 +10,20 @@ public class DeleteReservationHandler : ICommandHandler<DeleteReservationCommand
     private readonly ISeatRepository _seatRepository;
     private readonly IAuditRepository _auditRepository;
     private readonly IUnitOfWork _uow;
+    private readonly ICacheService _cacheService;
 
     public DeleteReservationHandler(
         IReservationRepository reservationRepository,
         ISeatRepository seatRepository,
         IAuditRepository auditRepository,
-        IUnitOfWork uow)
+        IUnitOfWork uow,
+        ICacheService cacheService)
     {
         _reservationRepository = reservationRepository;
         _seatRepository = seatRepository;
         _auditRepository = auditRepository;
         _uow = uow;
+        _cacheService = cacheService;
     }
 
     public async Task Handle(DeleteReservationCommand command, CancellationToken ct)
@@ -50,6 +53,7 @@ public class DeleteReservationHandler : ICommandHandler<DeleteReservationCommand
 
             await _reservationRepository.DeleteAsync(reservation, ct);
             await _uow.CommitTransactionAsync(ct);
+            await _cacheService.RemoveByPrefixAsync("Reservations:List", ct);
         }
         catch
         {

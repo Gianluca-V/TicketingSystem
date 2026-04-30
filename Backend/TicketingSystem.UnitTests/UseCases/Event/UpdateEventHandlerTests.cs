@@ -4,6 +4,7 @@ using TicketingSystem.Application.Interfaces.persistence;
 using TicketingSystem.Application.Interfaces.Services;
 using TicketingSystem.Application.UseCases.Event.UpdateEvent;
 using TicketingSystem.Domain.Entities;
+using TicketingSystem.UnitTests.Helpers;
 using Xunit;
 
 namespace TicketingSystem.UnitTests.UseCases.Event;
@@ -13,6 +14,7 @@ public class UpdateEventHandlerTests
     private readonly Mock<IEventRepository> _eventRepositoryMock;
     private readonly Mock<IAuditRepository> _auditRepositoryMock;
     private readonly Mock<ICurrentUserService> _currentUserServiceMock;
+    private readonly Mock<ICacheService> _cacheServiceMock;
     private readonly Mock<IUnitOfWork> _uowMock;
     private readonly UpdateEventHandler _handler;
 
@@ -21,12 +23,14 @@ public class UpdateEventHandlerTests
         _eventRepositoryMock = new Mock<IEventRepository>();
         _auditRepositoryMock = new Mock<IAuditRepository>();
         _currentUserServiceMock = new Mock<ICurrentUserService>();
-        _uowMock = new Mock<IUnitOfWork>();
+        _cacheServiceMock = MockHelpers.MockCacheService();
+        _uowMock = MockHelpers.MockUnitOfWork();
 
         _handler = new UpdateEventHandler(
             _eventRepositoryMock.Object,
             _auditRepositoryMock.Object,
             _currentUserServiceMock.Object,
+            _cacheServiceMock.Object,
             _uowMock.Object
         );
     }

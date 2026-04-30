@@ -8,12 +8,14 @@ public class DeleteEventHandler : ICommandHandler<DeleteEventCommand>
 {
     private readonly IEventRepository _eventRepository;
     private readonly IAuditRepository _auditRepository;
+    private readonly ICacheService _cacheService;
     private readonly IUnitOfWork _uow;
 
-    public DeleteEventHandler(IEventRepository eventRepository, IAuditRepository auditRepository, IUnitOfWork uow)
+    public DeleteEventHandler(IEventRepository eventRepository, IAuditRepository auditRepository, ICacheService cacheService, IUnitOfWork uow)
     {
         _eventRepository = eventRepository;
         _auditRepository = auditRepository;
+        _cacheService = cacheService;
         _uow = uow;
     }
 
@@ -37,6 +39,10 @@ public class DeleteEventHandler : ICommandHandler<DeleteEventCommand>
             }, ct);
 
             await _uow.CommitTransactionAsync(ct);
+
+            // Invalidate cache
+            await _cacheService.RemoveAsync($"Event:{command.Id}", ct);
+            await _cacheService.RemoveByPrefixAsync("Events:List", ct);
         }
         catch
         {

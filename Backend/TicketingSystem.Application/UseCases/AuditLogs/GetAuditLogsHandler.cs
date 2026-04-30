@@ -8,14 +8,23 @@ namespace TicketingSystem.Application.UseCases.AuditLogs;
 public class GetAuditLogsHandler : IQueryHandler<GetAuditLogsQuery, IEnumerable<AuditLogDto>>
 {
     private readonly IAuditRepository _auditRepository;
+    private readonly ICacheService _cacheService;
 
-    public GetAuditLogsHandler(IAuditRepository auditRepository)
+    public GetAuditLogsHandler(IAuditRepository auditRepository, ICacheService cacheService)
     {
         _auditRepository = auditRepository;
+        _cacheService = cacheService;
     }
 
     public async Task<IEnumerable<AuditLogDto>> Handle(GetAuditLogsQuery query, CancellationToken cancellationToken)
     {
+        var cacheKey = $"AuditLogs:List:{query.UserId}:{query.Action}:{query.From}:{query.To}:{query.Page}:{query.Take}";
+        var cachedLogs = await _cacheService.GetAsync<IEnumerable<AuditLogDto>>(cacheKey, cancellationToken);
+        if (cachedLogs != null)
+        {
+            return cachedLogs;
+        }
+
         if (query.From.HasValue)
         {
             query.From = DateTime.SpecifyKind(query.From.Value, DateTimeKind.Utc);
@@ -38,7 +47,7 @@ public class GetAuditLogsHandler : IQueryHandler<GetAuditLogsQuery, IEnumerable<
 
         var logs = await _auditRepository.GetAllAsync(filter, cancellationToken);
 
-        return logs.Select(l => new AuditLogDto(
+        var result = logs.Select(l => new AuditLogDto(
             l.Id,
             l.UserId,
             l.Action.ToString(),
@@ -46,6 +55,10 @@ public class GetAuditLogsHandler : IQueryHandler<GetAuditLogsQuery, IEnumerable<
             l.ResourceId,
             l.Details,
             l.OccurredAt
-        ));
+        )).ToList();
+
+        await _cacheService.SetAsync(cacheKey, result, TimeSpan.FromMinutes(2), cancellationToken);
+
+        return result;
     }
 }

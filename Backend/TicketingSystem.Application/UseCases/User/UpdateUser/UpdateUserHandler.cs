@@ -10,12 +10,14 @@ public class UpdateUserHandler : ICommandHandler<UpdateUserCommand>
 {
     private readonly UserManager<DomainUser> _userManager;
     private readonly IAuditRepository _auditRepository;
+    private readonly ICacheService _cacheService;
     private readonly IUnitOfWork _uow;
 
-    public UpdateUserHandler(UserManager<DomainUser> userManager, IAuditRepository auditRepository, IUnitOfWork uow)
+    public UpdateUserHandler(UserManager<DomainUser> userManager, IAuditRepository auditRepository, ICacheService cacheService, IUnitOfWork uow)
     {
         _userManager = userManager;
         _auditRepository = auditRepository;
+        _cacheService = cacheService;
         _uow = uow;
     }
 
@@ -52,6 +54,9 @@ public class UpdateUserHandler : ICommandHandler<UpdateUserCommand>
             }, ct);
 
             await _uow.CommitTransactionAsync(ct);
+
+            // Invalidate cache
+            await _cacheService.RemoveByPrefixAsync("Users:List", ct);
         }
         catch
         {

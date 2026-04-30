@@ -1,7 +1,9 @@
 ﻿using FluentAssertions;
 using Moq;
 using TicketingSystem.Application.Interfaces.persistence;
+using TicketingSystem.Application.Interfaces.Services;
 using TicketingSystem.Application.UseCases.Event.GetEvents;
+using TicketingSystem.UnitTests.Helpers;
 using Xunit;
 
 namespace TicketingSystem.UnitTests.UseCases.Event;
@@ -9,12 +11,14 @@ namespace TicketingSystem.UnitTests.UseCases.Event;
 public class GetEventByIdHandlerTests
 {
     private readonly Mock<IEventRepository> _eventRepositoryMock;
+    private readonly Mock<ICacheService> _cacheServiceMock;
     private readonly GetEventByIdHandler _handler;
 
     public GetEventByIdHandlerTests()
     {
         _eventRepositoryMock = new Mock<IEventRepository>();
-        _handler = new GetEventByIdHandler(_eventRepositoryMock.Object);
+        _cacheServiceMock = MockHelpers.MockCacheService();
+        _handler = new GetEventByIdHandler(_eventRepositoryMock.Object, _cacheServiceMock.Object);
     }
 
     [Fact]

@@ -18,6 +18,19 @@ services:
     networks:
       - ticketing-network
 
+  redis:
+    image: redis:7-alpine
+    container_name: ticketing-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ticketing-network
+
   api:
     build:
       context: .
@@ -26,6 +39,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=ticketing_db;Username=ticketing_user;Password=SecurePass123!;TrustServerCertificate=true;
+      - ConnectionStrings__Redis=redis:6379
       - Jwt__Secret=A_Very_Long_And_Secure_Secret_Key_At_Least_32_Chars
       - Jwt__Issuer=TicketingSystem
       - Jwt__Audience=TicketingSystemUsers
@@ -34,6 +48,8 @@ services:
     - "5221:5221"
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]

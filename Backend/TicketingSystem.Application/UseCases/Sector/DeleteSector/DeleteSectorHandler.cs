@@ -8,12 +8,14 @@ public class DeleteSectorHandler : ICommandHandler<DeleteSectorCommand>
 {
     private readonly ISectorRepository _sectorRepository;
     private readonly IAuditRepository _auditRepository;
+    private readonly ICacheService _cacheService;
     private readonly IUnitOfWork _uow;
 
-    public DeleteSectorHandler(ISectorRepository sectorRepository, IAuditRepository auditRepository, IUnitOfWork uow)
+    public DeleteSectorHandler(ISectorRepository sectorRepository, IAuditRepository auditRepository, ICacheService cacheService, IUnitOfWork uow)
     {
         _sectorRepository = sectorRepository;
         _auditRepository = auditRepository;
+        _cacheService = cacheService;
         _uow = uow;
     }
 
@@ -37,6 +39,11 @@ public class DeleteSectorHandler : ICommandHandler<DeleteSectorCommand>
             }, ct);
 
             await _uow.CommitTransactionAsync(ct);
+
+            // Invalidate cache
+            await _cacheService.RemoveAsync($"Sector:{command.Id}", ct);
+            await _cacheService.RemoveByPrefixAsync("Sectors:List", ct);
+            await _cacheService.RemoveByPrefixAsync("Seats:List", ct);
         }
         catch
         {

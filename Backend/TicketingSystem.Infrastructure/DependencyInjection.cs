@@ -29,6 +29,18 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ISectorRepository, SectorRepository>();
 
+        // Redis Caching
+        var redisConnection = configuration.GetConnectionString("Redis") ?? "localhost:6379";
+        services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(sp => 
+            StackExchange.Redis.ConnectionMultiplexer.Connect(redisConnection));
+
+        services.AddStackExchangeRedisCache(options =>
+        {
+            options.Configuration = redisConnection;
+        });
+
+        services.AddSingleton<ICacheService, CacheService>();
+
         services.AddIdentity<User, IdentityRole<int>>(options =>
         {
             options.Password.RequireDigit = false;

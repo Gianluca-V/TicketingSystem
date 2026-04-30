@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Moq;
+using TicketingSystem.Application.Interfaces.Services;
+using TicketingSystem.Application.Interfaces.persistence;
 
 namespace TicketingSystem.UnitTests.Helpers;
 
@@ -12,5 +14,15 @@ public static class MockHelpers
         mgr.Object.UserValidators.Add(new UserValidator<TUser>());
         mgr.Object.PasswordValidators.Add(new PasswordValidator<TUser>());
         return mgr;
+    }
+
+    public static Mock<ICacheService> MockCacheService()
+    {
+        return new Mock<ICacheService>();
+    }
+
+    public static Mock<IUnitOfWork> MockUnitOfWork()
+    {
+        return new Mock<IUnitOfWork>();
     }
 }

@@ -4,6 +4,7 @@ using TicketingSystem.Application.Interfaces.persistence;
 using TicketingSystem.Application.Interfaces.Services;
 using TicketingSystem.Application.UseCases.Seat.CreateSeat;
 using TicketingSystem.Domain.Entities;
+using TicketingSystem.UnitTests.Helpers;
 using Xunit;
 
 namespace TicketingSystem.UnitTests.UseCases.Seat;
@@ -14,6 +15,7 @@ public class CreateSeatsBulkHandlerTests
     private readonly Mock<ISectorRepository> _sectorRepositoryMock;
     private readonly Mock<IAuditRepository> _auditRepositoryMock;
     private readonly Mock<ICurrentUserService> _currentUserServiceMock;
+    private readonly Mock<ICacheService> _cacheServiceMock;
     private readonly Mock<IUnitOfWork> _uowMock;
     private readonly CreateSeatsBulkHandler _handler;
 
@@ -23,13 +25,15 @@ public class CreateSeatsBulkHandlerTests
         _sectorRepositoryMock = new Mock<ISectorRepository>();
         _auditRepositoryMock = new Mock<IAuditRepository>();
         _currentUserServiceMock = new Mock<ICurrentUserService>();
-        _uowMock = new Mock<IUnitOfWork>();
+        _cacheServiceMock = MockHelpers.MockCacheService();
+        _uowMock = MockHelpers.MockUnitOfWork();
 
         _handler = new CreateSeatsBulkHandler(
             _seatRepositoryMock.Object,
             _sectorRepositoryMock.Object,
             _auditRepositoryMock.Object,
             _currentUserServiceMock.Object,
+            _cacheServiceMock.Object,
             _uowMock.Object
         );
     }

@@ -2,8 +2,9 @@
 using Moq;
 using TicketingSystem.Application.DTOs;
 using TicketingSystem.Application.Interfaces.persistence;
+using TicketingSystem.Application.Interfaces.Services;
 using TicketingSystem.Application.UseCases.Seat.GetSeats;
-using TicketingSystem.Application.UseCases.Seat.Handlers;
+using TicketingSystem.UnitTests.Helpers;
 using TicketingSystem.Domain.Entities;
 using TicketingSystem.Domain.QueryFilters;
 using Xunit;
@@ -13,12 +14,14 @@ namespace TicketingSystem.UnitTests.UseCases.Seat;
 public class GetSeatByIdHandlerTests
 {
     private readonly Mock<ISeatRepository> _seatRepositoryMock;
+    private readonly Mock<ICacheService> _cacheServiceMock;
     private readonly GetSeatByIdHandler _handler;
 
     public GetSeatByIdHandlerTests()
     {
         _seatRepositoryMock = new Mock<ISeatRepository>();
-        _handler = new GetSeatByIdHandler(_seatRepositoryMock.Object);
+        _cacheServiceMock = MockHelpers.MockCacheService();
+        _handler = new GetSeatByIdHandler(_seatRepositoryMock.Object, _cacheServiceMock.Object);
     }
 
     [Fact]

@@ -9,13 +9,15 @@ public class CreateSectorHandler : ICommandHandler<CreateSectorCommand, int>
     private readonly ISectorRepository _sectorRepository;
     private readonly IEventRepository _eventRepository;
     private readonly IAuditRepository _auditRepository;
+    private readonly ICacheService _cacheService;
     private readonly IUnitOfWork _uow;
 
-    public CreateSectorHandler(ISectorRepository sectorRepository, IEventRepository eventRepository, IAuditRepository auditRepository, IUnitOfWork uow)
+    public CreateSectorHandler(ISectorRepository sectorRepository, IEventRepository eventRepository, IAuditRepository auditRepository, ICacheService cacheService, IUnitOfWork uow)
     {
         _sectorRepository = sectorRepository;
         _eventRepository = eventRepository;
         _auditRepository = auditRepository;
+        _cacheService = cacheService;
         _uow = uow;
     }
 
@@ -49,6 +51,11 @@ public class CreateSectorHandler : ICommandHandler<CreateSectorCommand, int>
             }, ct);
 
             await _uow.CommitTransactionAsync(ct);
+
+            // Invalidate cache
+            await _cacheService.RemoveByPrefixAsync("Sectors:List", ct);
+            await _cacheService.RemoveByPrefixAsync("Seats:List", ct);
+
             return sector.Id;
         }
         catch

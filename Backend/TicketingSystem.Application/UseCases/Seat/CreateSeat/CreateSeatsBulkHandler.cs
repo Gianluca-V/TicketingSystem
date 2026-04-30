@@ -10,6 +10,7 @@ public class CreateSeatsBulkHandler : ICommandHandler<CreateSeatsBulkCommand, IE
     private readonly ISectorRepository _sectorRepository;
     private readonly IAuditRepository _auditRepository;
     private readonly ICurrentUserService _currentUserService;
+    private readonly ICacheService _cacheService;
     private readonly IUnitOfWork _uow;
 
     public CreateSeatsBulkHandler(
@@ -17,12 +18,14 @@ public class CreateSeatsBulkHandler : ICommandHandler<CreateSeatsBulkCommand, IE
         ISectorRepository sectorRepository, 
         IAuditRepository auditRepository, 
         ICurrentUserService currentUserService,
+        ICacheService cacheService,
         IUnitOfWork uow)
     {
         _seatRepository = seatRepository;
         _sectorRepository = sectorRepository;
         _auditRepository = auditRepository;
         _currentUserService = currentUserService;
+        _cacheService = cacheService;
         _uow = uow;
     }
 
@@ -56,6 +59,10 @@ public class CreateSeatsBulkHandler : ICommandHandler<CreateSeatsBulkCommand, IE
             }, ct);
 
             await _uow.CommitTransactionAsync(ct);
+
+            // Invalidate cache
+            await _cacheService.RemoveByPrefixAsync("Seats:List", ct);
+
             return seats.Select(s => s.Id);
         }
         catch

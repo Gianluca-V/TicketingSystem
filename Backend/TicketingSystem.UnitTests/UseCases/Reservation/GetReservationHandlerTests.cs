@@ -2,8 +2,10 @@ using FluentAssertions;
 using Moq;
 using TicketingSystem.Application.DTOs;
 using TicketingSystem.Application.Interfaces.persistence;
+using TicketingSystem.Application.Interfaces.Services;
 using TicketingSystem.Application.UseCases.Reservation.GetReservation;
 using TicketingSystem.Domain.Entities;
+using TicketingSystem.UnitTests.Helpers;
 using Xunit;
 
 namespace TicketingSystem.UnitTests.UseCases.Reservation;
@@ -11,12 +13,14 @@ namespace TicketingSystem.UnitTests.UseCases.Reservation;
 public class GetReservationHandlerTests
 {
     private readonly Mock<IReservationRepository> _reservationRepositoryMock;
+    private readonly Mock<ICacheService> _cacheServiceMock;
     private readonly GetReservationByIdHandler _handler;
 
     public GetReservationHandlerTests()
     {
         _reservationRepositoryMock = new Mock<IReservationRepository>();
-        _handler = new GetReservationByIdHandler(_reservationRepositoryMock.Object);
+        _cacheServiceMock = MockHelpers.MockCacheService();
+        _handler = new GetReservationByIdHandler(_reservationRepositoryMock.Object, _cacheServiceMock.Object);
     }
 
     [Fact]

@@ -15,6 +15,7 @@ public class CreateUserHandlerTests
 {
     private readonly Mock<UserManager<DomainUser>> _userManagerMock;
     private readonly Mock<IAuditRepository> _auditRepositoryMock;
+    private readonly Mock<ICacheService> _cacheServiceMock;
     private readonly Mock<IUnitOfWork> _uowMock;
     private readonly CreateUserHandler _handler;
 
@@ -22,11 +23,13 @@ public class CreateUserHandlerTests
     {
         _userManagerMock = MockHelpers.MockUserManager<DomainUser>();
         _auditRepositoryMock = new Mock<IAuditRepository>();
-        _uowMock = new Mock<IUnitOfWork>();
+        _cacheServiceMock = MockHelpers.MockCacheService();
+        _uowMock = MockHelpers.MockUnitOfWork();
 
         _handler = new CreateUserHandler(
             _userManagerMock.Object,
             _auditRepositoryMock.Object,
+            _cacheServiceMock.Object,
             _uowMock.Object
         );
     }

@@ -11,12 +11,14 @@ public class CreateUserHandler : ICommandHandler<CreateUserCommand, int>
 {
     private readonly UserManager<DomainUser> _userManager;
     private readonly IAuditRepository _auditRepository;
+    private readonly ICacheService _cacheService;
     private readonly IUnitOfWork _uow;
 
-    public CreateUserHandler(UserManager<DomainUser> userManager, IAuditRepository auditRepository, IUnitOfWork uow)
+    public CreateUserHandler(UserManager<DomainUser> userManager, IAuditRepository auditRepository, ICacheService cacheService, IUnitOfWork uow)
     {
         _userManager = userManager;
         _auditRepository = auditRepository;
+        _cacheService = cacheService;
         _uow = uow;
     }
 
@@ -55,9 +57,12 @@ public class CreateUserHandler : ICommandHandler<CreateUserCommand, int>
             }, ct);
 
             await _uow.CommitTransactionAsync(ct);
+
+            // Invalidate cache
+            await _cacheService.RemoveByPrefixAsync("Users:List", ct);
+
             return user.Id;
-        }
-        catch (BusinessException)
+        }        catch (BusinessException)
         {
             await _uow.RollbackTransactionAsync(ct);
             throw;

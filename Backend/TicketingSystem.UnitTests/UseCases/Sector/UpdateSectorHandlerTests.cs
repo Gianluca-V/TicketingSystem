@@ -4,6 +4,7 @@ using TicketingSystem.Application.Interfaces.persistence;
 using TicketingSystem.Application.Interfaces.Services;
 using TicketingSystem.Application.UseCases.Sector.UpdateSector;
 using TicketingSystem.Domain.Entities;
+using TicketingSystem.UnitTests.Helpers;
 using Xunit;
 
 namespace TicketingSystem.UnitTests.UseCases.Sector;
@@ -12,6 +13,7 @@ public class UpdateSectorHandlerTests
 {
     private readonly Mock<ISectorRepository> _sectorRepositoryMock;
     private readonly Mock<IAuditRepository> _auditRepositoryMock;
+    private readonly Mock<ICacheService> _cacheServiceMock;
     private readonly Mock<IUnitOfWork> _uowMock;
     private readonly UpdateSectorHandler _handler;
 
@@ -19,11 +21,13 @@ public class UpdateSectorHandlerTests
     {
         _sectorRepositoryMock = new Mock<ISectorRepository>();
         _auditRepositoryMock = new Mock<IAuditRepository>();
-        _uowMock = new Mock<IUnitOfWork>();
+        _cacheServiceMock = MockHelpers.MockCacheService();
+        _uowMock = MockHelpers.MockUnitOfWork();
 
         _handler = new UpdateSectorHandler(
             _sectorRepositoryMock.Object,
             _auditRepositoryMock.Object,
+            _cacheServiceMock.Object,
             _uowMock.Object
         );
     }

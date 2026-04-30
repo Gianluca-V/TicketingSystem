@@ -4,6 +4,7 @@ using TicketingSystem.Application.Interfaces.persistence;
 using TicketingSystem.Application.Interfaces.Services;
 using TicketingSystem.Application.UseCases.Event.DeleteEvent;
 using TicketingSystem.Domain.Entities;
+using TicketingSystem.UnitTests.Helpers;
 using Xunit;
 
 namespace TicketingSystem.UnitTests.UseCases.Event;
@@ -12,6 +13,7 @@ public class DeleteEventHandlerTests
 {
     private readonly Mock<IEventRepository> _eventRepositoryMock;
     private readonly Mock<IAuditRepository> _auditRepositoryMock;
+    private readonly Mock<ICacheService> _cacheServiceMock;
     private readonly Mock<IUnitOfWork> _uowMock;
     private readonly DeleteEventHandler _handler;
 
@@ -19,11 +21,13 @@ public class DeleteEventHandlerTests
     {
         _eventRepositoryMock = new Mock<IEventRepository>();
         _auditRepositoryMock = new Mock<IAuditRepository>();
-        _uowMock = new Mock<IUnitOfWork>();
+        _cacheServiceMock = MockHelpers.MockCacheService();
+        _uowMock = MockHelpers.MockUnitOfWork();
 
         _handler = new DeleteEventHandler(
             _eventRepositoryMock.Object,
             _auditRepositoryMock.Object,
+            _cacheServiceMock.Object,
             _uowMock.Object
         );
     }

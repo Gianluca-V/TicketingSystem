@@ -16,17 +16,20 @@ public class DeleteUserHandlerTests
     private readonly Mock<UserManager<DomainUser>> _userManagerMock;
     private readonly Mock<IAuditRepository> _auditRepositoryMock;
     private readonly Mock<IUnitOfWork> _uowMock;
+    private readonly Mock<ICacheService> _cacheServiceMock;
     private readonly DeleteUserHandler _handler;
 
     public DeleteUserHandlerTests()
     {
         _userManagerMock = MockHelpers.MockUserManager<DomainUser>();
         _auditRepositoryMock = new Mock<IAuditRepository>();
-        _uowMock = new Mock<IUnitOfWork>();
+        _uowMock = MockHelpers.MockUnitOfWork();
+        _cacheServiceMock = MockHelpers.MockCacheService();
 
         _handler = new DeleteUserHandler(
             _userManagerMock.Object,
             _auditRepositoryMock.Object,
+            _cacheServiceMock.Object,
             _uowMock.Object
         );
     }

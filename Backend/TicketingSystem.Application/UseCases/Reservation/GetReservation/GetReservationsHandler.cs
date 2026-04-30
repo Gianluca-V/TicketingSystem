@@ -14,16 +14,25 @@ namespace TicketingSystem.Application.UseCases.Reservation.GetReservation
     : IQueryHandler<GetReservationsQuery, IEnumerable<ReservationDto>>
     {
         private readonly IReservationRepository _reservationRepository;
+        private readonly ICacheService _cacheService;
 
-        public GetReservationsHandler(IReservationRepository reservationRepository)
+        public GetReservationsHandler(IReservationRepository reservationRepository, ICacheService cacheService)
         {
             _reservationRepository = reservationRepository;
+            _cacheService = cacheService;
         }
 
         public async Task<IEnumerable<ReservationDto>> Handle(
             GetReservationsQuery query,
             CancellationToken cancellationToken)
         {
+            var cacheKey = $"Reservations:List:{query.UserId}:{query.SeatId}:{query.Expired}:{query.Page}:{query.Take}";
+            var cachedReservations = await _cacheService.GetAsync<IEnumerable<ReservationDto>>(cacheKey, cancellationToken);
+            if (cachedReservations != null)
+            {
+                return cachedReservations;
+            }
+
             var filter = new ReservationFilter
             {
                 SeatId = query.SeatId,
@@ -39,14 +48,18 @@ namespace TicketingSystem.Application.UseCases.Reservation.GetReservation
                 filter,
                 cancellationToken);
 
-            return reservations.Select(r => new ReservationDto(
+            var result = reservations.Select(r => new ReservationDto(
                 r.Id,
                 r.SeatId,
                 r.UserId.ToString(),
                 r.ReservedAt,
                 r.ExpiresAt,
                 r.IsExpired
-            ));
+            )).ToList();
+
+            await _cacheService.SetAsync(cacheKey, result, TimeSpan.FromMinutes(5), cancellationToken);
+
+            return result;
         }
     }
 }

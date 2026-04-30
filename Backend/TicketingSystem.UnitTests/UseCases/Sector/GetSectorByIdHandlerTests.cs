@@ -1,8 +1,10 @@
 ﻿using FluentAssertions;
 using Moq;
 using TicketingSystem.Application.Interfaces.persistence;
+using TicketingSystem.Application.Interfaces.Services;
 using TicketingSystem.Application.UseCases.Sector.GetSectors;
 using TicketingSystem.Domain.Entities;
+using TicketingSystem.UnitTests.Helpers;
 using Xunit;
 
 namespace TicketingSystem.UnitTests.UseCases.Sector;
@@ -10,12 +12,14 @@ namespace TicketingSystem.UnitTests.UseCases.Sector;
 public class GetSectorByIdHandlerTests
 {
     private readonly Mock<ISectorRepository> _sectorRepositoryMock;
+    private readonly Mock<ICacheService> _cacheServiceMock;
     private readonly GetSectorByIdHandler _handler;
 
     public GetSectorByIdHandlerTests()
     {
         _sectorRepositoryMock = new Mock<ISectorRepository>();
-        _handler = new GetSectorByIdHandler(_sectorRepositoryMock.Object);
+        _cacheServiceMock = MockHelpers.MockCacheService();
+        _handler = new GetSectorByIdHandler(_sectorRepositoryMock.Object, _cacheServiceMock.Object);
     }
 
     [Fact]

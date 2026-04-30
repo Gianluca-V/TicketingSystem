@@ -18,17 +18,20 @@ namespace TicketingSystem.Application.UseCases.Seat.ReserveSeat
         private readonly ISeatRepository _seatRepository;
         private readonly IReservationRepository _reservationRepository;
         private readonly IAuditRepository _auditRepository;
+        private readonly ICacheService _cacheService;
         private readonly IUnitOfWork _uow;
 
         public ReserveSeatHandler(
             ISeatRepository seatRepository,
             IReservationRepository reservationRepository,
             IAuditRepository auditRepository,
+            ICacheService cacheService,
             IUnitOfWork uow)
         {
             _seatRepository = seatRepository;
             _reservationRepository = reservationRepository;
             _auditRepository = auditRepository;
+            _cacheService = cacheService;
             _uow = uow;
         }
 
@@ -68,6 +71,11 @@ namespace TicketingSystem.Application.UseCases.Seat.ReserveSeat
                 }, ct);
 
                 await _uow.CommitTransactionAsync(ct);
+
+                // Invalidate cache
+                await _cacheService.RemoveByPrefixAsync("Reservations:List", ct);
+                await _cacheService.RemoveByPrefixAsync("AuditLogs:List", ct);
+                await _cacheService.RemoveByPrefixAsync("Seats:List", ct);
 
                 return new ReserveSeatResponse(
                     reservation.Id,

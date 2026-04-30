@@ -13,6 +13,7 @@ public class CreateSectorHandlerTests
     private readonly Mock<ISectorRepository> _sectorRepositoryMock;
     private readonly Mock<IEventRepository> _eventRepositoryMock;
     private readonly Mock<IAuditRepository> _auditRepositoryMock;
+    private readonly Mock<ICacheService> _cacheServiceMock;
     private readonly Mock<IUnitOfWork> _uowMock;
     private readonly CreateSectorHandler _handler;
 
@@ -21,12 +22,14 @@ public class CreateSectorHandlerTests
         _sectorRepositoryMock = new Mock<ISectorRepository>();
         _eventRepositoryMock = new Mock<IEventRepository>();
         _auditRepositoryMock = new Mock<IAuditRepository>();
+        _cacheServiceMock = new Mock<ICacheService>();
         _uowMock = new Mock<IUnitOfWork>();
 
         _handler = new CreateSectorHandler(
             _sectorRepositoryMock.Object,
             _eventRepositoryMock.Object,
             _auditRepositoryMock.Object,
+            _cacheServiceMock.Object,
             _uowMock.Object
         );
     }

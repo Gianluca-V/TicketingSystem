@@ -16,6 +16,7 @@ public class ReserveSeatHandlerTests
     private readonly Mock<ISeatRepository> _seatRepositoryMock;
     private readonly Mock<IReservationRepository> _reservationRepositoryMock;
     private readonly Mock<IAuditRepository> _auditRepositoryMock;
+    private readonly Mock<ICacheService> _cacheServiceMock;
     private readonly Mock<IUnitOfWork> _uowMock;
     private readonly ReserveSeatHandler _handler;
 
@@ -24,12 +25,14 @@ public class ReserveSeatHandlerTests
         _seatRepositoryMock = new Mock<ISeatRepository>();
         _reservationRepositoryMock = new Mock<IReservationRepository>();
         _auditRepositoryMock = new Mock<IAuditRepository>();
+        _cacheServiceMock = new Mock<ICacheService>();
         _uowMock = new Mock<IUnitOfWork>();
 
         _handler = new ReserveSeatHandler(
             _seatRepositoryMock.Object,
             _reservationRepositoryMock.Object,
             _auditRepositoryMock.Object,
+            _cacheServiceMock.Object,
             _uowMock.Object
         );
     }

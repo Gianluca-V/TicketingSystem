@@ -13,15 +13,18 @@ namespace TicketingSystem.Api.Controllers;
 [Route("api/v1/[controller]")]
 public class EventsController : ControllerBase
 {
+    private readonly ICommandHandler<DeleteEventCommand> _deleteEventHandler;
     private readonly ICommandHandler<UpdateEventCommand> _updateEventHandler;
     private readonly IQueryHandler<GetEventsQuery, IEnumerable<EventDto>> _getEventsHandler;
     private readonly IQueryHandler<GetEventByIdQuery, EventDto?> _getEventByIdHandler;
 
     public EventsController(
+        ICommandHandler<DeleteEventCommand> deleteEventHandler,
         ICommandHandler<UpdateEventCommand> updateEventHandler,
         IQueryHandler<GetEventsQuery, IEnumerable<EventDto>> getEventsHandler,
         IQueryHandler<GetEventByIdQuery, EventDto?> getEventByIdHandler)
     {
+        _deleteEventHandler = deleteEventHandler;
         _updateEventHandler = updateEventHandler;
         _getEventsHandler = getEventsHandler;
         _getEventByIdHandler = getEventByIdHandler;
@@ -50,6 +53,13 @@ public class EventsController : ControllerBase
     {
         command.Id = id;
         await _updateEventHandler.Handle(command, ct);
+        return NoContent();
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id, CancellationToken ct)
+    {
+        await _deleteEventHandler.Handle(new DeleteEventCommand { Id = id }, ct);
         return NoContent();
     }
 }

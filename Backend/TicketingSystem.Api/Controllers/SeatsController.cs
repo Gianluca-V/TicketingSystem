@@ -15,17 +15,20 @@ public class SeatsController : ControllerBase
 {
     private readonly ICommandHandler<CreateSeatCommand, int> _createSeatHandler;
     private readonly ICommandHandler<DeleteSeatCommand> _deleteSeatHandler;
+    private readonly ICommandHandler<UpdateSeatCommand> _updateSeatHandler;
     private readonly IQueryHandler<GetSeatsQuery, IEnumerable<SeatDto>> _getSeatsHandler;
     private readonly IQueryHandler<GetSeatByIdQuery, SeatDto?> _getSeatByIdHandler;
 
     public SeatsController(
         ICommandHandler<CreateSeatCommand, int> createSeatHandler,
         ICommandHandler<DeleteSeatCommand> deleteSeatHandler,
+        ICommandHandler<UpdateSeatCommand> updateSeatHandler,
         IQueryHandler<GetSeatsQuery, IEnumerable<SeatDto>> getSeatsHandler,
         IQueryHandler<GetSeatByIdQuery, SeatDto?> getSeatByIdHandler)
     {
         _createSeatHandler = createSeatHandler;
         _deleteSeatHandler = deleteSeatHandler;
+        _updateSeatHandler = updateSeatHandler;
         _getSeatsHandler = getSeatsHandler;
         _getSeatByIdHandler = getSeatByIdHandler;
     }
@@ -71,6 +74,14 @@ public class SeatsController : ControllerBase
             return NotFound();
 
         return Ok(seatDto);
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateSeatCommand command, CancellationToken ct)
+    {
+        command.Id = id;
+        await _updateSeatHandler.Handle(command, ct);
+        return NoContent();
     }
 
     [HttpDelete("{id}")]

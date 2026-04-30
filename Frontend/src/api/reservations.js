@@ -18,6 +18,9 @@ export const reservationsApi = {
 
   list: (params = {}) =>
     client.get(E.RESERVATIONS, { params }).then((r) => r.data),
+
+  cancel: (reservationId) =>
+    client.delete(E.RESERVATION(reservationId)).then((r) => r.data),
 }
 
 // ── Payments ──────────────────────────────────────────────────────────────────

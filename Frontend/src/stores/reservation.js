@@ -63,6 +63,25 @@ export const useReservationStore = defineStore('reservation', () => {
     }
   }
 
+  async function cancel() {
+    if (!reservationId.value) {
+      clear()
+      return true
+    }
+    loading.value = true
+    error.value   = null
+    try {
+      await reservationsApi.cancel(reservationId.value)
+      clear()
+      return true
+    } catch (e) {
+      error.value = e.message
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
   function clear() {
     reservationId.value = null
     expiresAt.value     = null
@@ -79,6 +98,6 @@ export const useReservationStore = defineStore('reservation', () => {
     reservationId, expiresAt, seat, sector, event,
     loading, error, paymentDone,
     hasActiveReservation, secondsRemaining,
-    reserve, pay, clear, clearError,
+    reserve, pay, cancel, clear, clearError,
   }
 })

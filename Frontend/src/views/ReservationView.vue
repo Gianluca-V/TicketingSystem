@@ -95,9 +95,9 @@ const dashOffset = computed(() => {
   return circumference * (1 - progress)
 })
 
-function handleRelease() {
-  res.clear()
-  router.push('/')
+async function handleRelease() {
+  const ok = await res.cancel()
+  if (ok) router.push('/')
 }
 </script>
 

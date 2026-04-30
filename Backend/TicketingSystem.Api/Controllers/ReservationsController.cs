@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using TicketingSystem.Application.DTOs;
 using TicketingSystem.Application.Interfaces.Services;
 using TicketingSystem.Application.UseCases.Reservation.GetReservation;
+using TicketingSystem.Application.UseCases.Reservation.DeleteReservation;
 using TicketingSystem.Application.UseCases.Seat.ReserveSeat;
 
 namespace TicketingSystem.Api.Controllers;
@@ -13,17 +14,37 @@ namespace TicketingSystem.Api.Controllers;
 public class ReservationsController : ControllerBase
 {
     private readonly ICommandHandler<ReserveSeatCommand, ReserveSeatResponse> _reserveSeatHandler;
+    private readonly ICommandHandler<DeleteReservationCommand> _deleteReservationHandler;
     private readonly IQueryHandler<GetReservationByIdQuery, ReservationDto?> _getReservationHandler;
     private readonly IQueryHandler<GetReservationsQuery, IEnumerable<ReservationDto>> _getReservationsHandler;
 
     public ReservationsController(
         ICommandHandler<ReserveSeatCommand, ReserveSeatResponse> reserveSeatHandler,
+        ICommandHandler<DeleteReservationCommand> deleteReservationHandler,
         IQueryHandler<GetReservationByIdQuery, ReservationDto?> getReservationHandler,
         IQueryHandler<GetReservationsQuery, IEnumerable<ReservationDto>> getReservationsHandler)
     {
         _reserveSeatHandler = reserveSeatHandler;
+        _deleteReservationHandler = deleteReservationHandler;
         _getReservationHandler = getReservationHandler;
         _getReservationsHandler = getReservationsHandler;
+    }
+
+    /// <summary>
+    /// Delete reservation (cancel and release seat)
+    /// DELETE /api/v1/reservations/{reservationId}
+    /// </summary>
+    [HttpDelete("reservations/{reservationId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> Delete(
+        Guid reservationId,
+        CancellationToken cancellationToken)
+    {
+        await _deleteReservationHandler.Handle(
+            new DeleteReservationCommand(reservationId),
+            cancellationToken);
+
+        return NoContent();
     }
 
     /// <summary>

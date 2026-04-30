@@ -12,5 +12,18 @@ namespace TicketingSystem.Api.Controllers;
 [Route("api/v1")]
 public class ReservationsController : ControllerBase
 {
-    
+    private readonly ICommandHandler<ReserveSeatCommand, ReserveSeatResponse> _reserveSeatHandler;
+
+    public ReservationsController(
+        ICommandHandler<ReserveSeatCommand, ReserveSeatResponse> reserveSeatHandler)
+    {
+        _reserveSeatHandler = reserveSeatHandler;
+    }
+
+    [HttpPost("seats/{seatId}/reservations")]
+    public async Task<IActionResult> Create(int seatId, [FromBody] ReserveSeatCommand command, CancellationToken ct)
+    {
+        var reservation = await _reserveSeatHandler.Handle(new ReserveSeatCommand(seatId, command.UserId), ct);
+        return Ok(reservation);
+    }
 }

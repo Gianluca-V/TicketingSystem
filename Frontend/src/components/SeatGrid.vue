@@ -45,8 +45,9 @@
 
 <script setup>
 const props = defineProps({
-  seats:    { type: Array,  required: true },
-  selected: { type: Object, default: null },
+  seats:          { type: Array,  required: true },
+  selected:       { type: Object, default: null },
+  myReservations: { type: Array,  default: () => [] },
 })
 
 defineEmits(['select'])
@@ -54,17 +55,21 @@ defineEmits(['select'])
 function getSeatClass(seat) {
   const base = seat.status?.toLowerCase() ?? 'available'
   const isSelected = props.selected && seat.id === props.selected.id
+  const isMine = props.myReservations.includes(seat.id)
 
   return {
     available: base === 'available',
     reserved:  base === 'reserved',
     sold:      base === 'sold' || base === 'confirmed',
-    'selected-seat': isSelected,
+    'selected-seat': isSelected || (base === 'reserved' && isMine),
   }
 }
 
 function isSelectable(seat) {
-  return seat.status?.toLowerCase() === 'available'
+  const status = seat.status?.toLowerCase()
+  if (status === 'available') return true
+  if (status === 'reserved' && props.myReservations.includes(seat.id)) return true
+  return false
 }
 
 function shortLabel(name) {

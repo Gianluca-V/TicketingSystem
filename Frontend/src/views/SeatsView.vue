@@ -37,6 +37,7 @@
         <SeatGrid
           :seats="seats"
           :selected="selectedSeat"
+          :my-reservations="myRes.map(r => r.seatId)"
           @select="handleSelect"
         />
 
@@ -84,6 +85,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { sectorsApi, seatsApi } from '@/api/events'
+import { reservationsApi } from '@/api/reservations'
 import { useAuthStore } from '@/stores/auth'
 import { useReservationStore } from '@/stores/reservation'
 import SeatGrid from '@/components/SeatGrid.vue'
@@ -100,6 +102,7 @@ const router      = useRouter()
 
 const sector       = ref(null)
 const seats        = ref([])
+const myRes        = ref([]) // User's active reservations
 const loading      = ref(false)
 const error        = ref(null)
 const selectedSeat = ref(null)
@@ -108,6 +111,19 @@ const reserveError = ref(null)
 
 // Highlight selected seat in the grid by patching seat list
 function handleSelect(seat) {
+  // If user already owns this reservation, redirect to reservation/payment
+  const existing = myRes.value.find(r => r.seatId === seat.id)
+  if (existing) {
+    resStore.reservationId = existing.id
+    resStore.expiresAt     = existing.expiresAt
+    resStore.seat          = seat
+    resStore.sector        = sector.value
+    resStore.event         = { id: props.eventId, name: sector.value?.eventName }
+    resStore.paymentDone   = false
+    router.push('/reservation')
+    return
+  }
+
   selectedSeat.value = seat
   reserveError.value = null
 }
@@ -116,14 +132,16 @@ async function load() {
   loading.value = true
   error.value   = null
   try {
-    const [sec, seatList] = await Promise.all([
+    const [sec, seatList, userRes] = await Promise.all([
       sectorsApi.get(props.eventId, props.sectorId),
       seatsApi.listBySector(props.eventId, props.sectorId),
+      auth.userId ? reservationsApi.list({ userId: auth.userId, expired: false }) : [],
     ])
     sector.value = sec
     seats.value  = seatList.sort((a, b) => 
       a.seatNumber.localeCompare(b.seatNumber, undefined, { numeric: true })
     )
+    myRes.value = Array.isArray(userRes) ? userRes : userRes?.items ?? []
   } catch (e) {
     error.value = e.message
   } finally {

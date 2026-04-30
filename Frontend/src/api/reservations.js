@@ -15,6 +15,9 @@ export const reservationsApi = {
 
   get: (reservationId) =>
     client.get(E.RESERVATION(reservationId)).then((r) => r.data),
+
+  list: (params = {}) =>
+    client.get(E.RESERVATIONS, { params }).then((r) => r.data),
 }
 
 // ── Payments ──────────────────────────────────────────────────────────────────

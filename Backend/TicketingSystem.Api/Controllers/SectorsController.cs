@@ -14,15 +14,18 @@ namespace TicketingSystem.Api.Controllers;
 public class SectorsController : ControllerBase
 {
     private readonly ICommandHandler<CreateSectorCommand, int> _createSectorHandler;
+    private readonly ICommandHandler<UpdateSectorCommand> _updateSectorHandler;
     private readonly IQueryHandler<GetSectorsQuery, IEnumerable<SectorDto>> _getSectorsHandler;
     private readonly IQueryHandler<GetSectorByIdQuery, SectorDto?> _getSectorByIdHandler;
 
     public SectorsController(
         ICommandHandler<CreateSectorCommand, int> createSectorHandler,
+        ICommandHandler<UpdateSectorCommand> updateSectorHandler,
         IQueryHandler<GetSectorsQuery, IEnumerable<SectorDto>> getSectorsHandler,
         IQueryHandler<GetSectorByIdQuery, SectorDto?> getSectorByIdHandler)
     {
         _createSectorHandler = createSectorHandler;
+        _updateSectorHandler = updateSectorHandler;
         _getSectorsHandler = getSectorsHandler;
         _getSectorByIdHandler = getSectorByIdHandler;
     }
@@ -65,5 +68,13 @@ public class SectorsController : ControllerBase
             return NotFound();
 
         return Ok(sectorDto);
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateSectorCommand command, CancellationToken ct)
+    {
+        command.Id = id;
+        await _updateSectorHandler.Handle(command, ct);
+        return NoContent();
     }
 }

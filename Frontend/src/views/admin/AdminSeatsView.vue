@@ -244,10 +244,8 @@ async function handleSave() {
       const i = seats.value.findIndex(s => s.id === editTarget.value.id)
       if (i !== -1) seats.value[i] = { ...seats.value[i], ...form.value }
     } else {
-      const c = await adminSeatsApi.create({
+      const c = await adminSeatsApi.create(props.eventId, props.sectorId, {
         ...form.value,
-        eventId: props.eventId,
-        sectorId: props.sectorId,
         price: sectorPrice.value
       })
       seats.value.push(c)

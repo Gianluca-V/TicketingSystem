@@ -64,8 +64,8 @@ export const adminSeatsApi = {
   listBySector: (eventId, sectorId) =>
     client.get(E.SEATS_BY_SECTOR(eventId, sectorId)).then((r) => r.data),
 
-  create: (payload) =>
-    client.post(E.SEATS, payload).then((r) => r.data),
+  create: (eventId, sectorId, payload) =>
+    client.post(E.SEATS_BY_SECTOR(eventId, sectorId), payload).then((r) => r.data),
 
   createBulk: (eventId, sectorId, seats) =>
     client.post(`${E.SEATS_BY_SECTOR(eventId, sectorId)}/bulk`, seats).then((r) => r.data),

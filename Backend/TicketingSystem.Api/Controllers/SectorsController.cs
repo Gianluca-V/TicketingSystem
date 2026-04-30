@@ -14,11 +14,14 @@ namespace TicketingSystem.Api.Controllers;
 public class SectorsController : ControllerBase
 {
     private readonly IQueryHandler<GetSectorsQuery, IEnumerable<SectorDto>> _getSectorsHandler;
+    private readonly IQueryHandler<GetSectorByIdQuery, SectorDto?> _getSectorByIdHandler;
 
     public SectorsController(
-        IQueryHandler<GetSectorsQuery, IEnumerable<SectorDto>> getSectorsHandler)
+        IQueryHandler<GetSectorsQuery, IEnumerable<SectorDto>> getSectorsHandler,
+        IQueryHandler<GetSectorByIdQuery, SectorDto?> getSectorByIdHandler)
     {
         _getSectorsHandler = getSectorsHandler;
+        _getSectorByIdHandler = getSectorByIdHandler;
     }
 
     [HttpGet]
@@ -28,5 +31,20 @@ public class SectorsController : ControllerBase
 
         var sectors = await _getSectorsHandler.Handle(query, ct);
         return Ok(sectors);
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetSectorById(int eventId, int id, CancellationToken ct)
+    {
+        var sectorDto = await _getSectorByIdHandler.Handle(new GetSectorByIdQuery
+        {
+            EventId = eventId,
+            SectorId = id
+        }, ct);
+
+        if (sectorDto is null)
+            return NotFound();
+
+        return Ok(sectorDto);
     }
 }

@@ -13,13 +13,16 @@ namespace TicketingSystem.Api.Controllers;
 [Route("api/v1/[controller]")]
 public class EventsController : ControllerBase
 {
+    private readonly ICommandHandler<UpdateEventCommand> _updateEventHandler;
     private readonly IQueryHandler<GetEventsQuery, IEnumerable<EventDto>> _getEventsHandler;
     private readonly IQueryHandler<GetEventByIdQuery, EventDto?> _getEventByIdHandler;
 
     public EventsController(
+        ICommandHandler<UpdateEventCommand> updateEventHandler,
         IQueryHandler<GetEventsQuery, IEnumerable<EventDto>> getEventsHandler,
         IQueryHandler<GetEventByIdQuery, EventDto?> getEventByIdHandler)
     {
+        _updateEventHandler = updateEventHandler;
         _getEventsHandler = getEventsHandler;
         _getEventByIdHandler = getEventByIdHandler;
     }
@@ -40,5 +43,13 @@ public class EventsController : ControllerBase
             return NotFound();
 
         return Ok(eventDto);
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateEventCommand command, CancellationToken ct)
+    {
+        command.Id = id;
+        await _updateEventHandler.Handle(command, ct);
+        return NoContent();
     }
 }

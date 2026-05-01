@@ -33,24 +33,51 @@ public class GlobalExceptionMiddleware
 
         context.Response.ContentType = "application/json";
 
-        var isDevelopment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
+        var isDevelopment =
+            Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
+
+        string? innerMessage = exception.InnerException?.Message;
+        string? baseMessage = exception.GetBaseException().Message;
 
         switch (exception)
         {
             case DbUpdateConcurrencyException:
             case ConflictException:
+
                 context.Response.StatusCode = StatusCodes.Status409Conflict;
+
                 await context.Response.WriteAsJsonAsync(new
                 {
-                    error = exception is ConflictException ? exception.Message : "Concurrent update conflict",
+                    error = exception is ConflictException
+                        ? exception.Message
+                        : "Concurrent update conflict",
+
                     retryAfter = 1000,
+
                     message = isDevelopment ? exception.Message : null,
+                    inner = isDevelopment ? innerMessage : null,
                     detail = isDevelopment ? exception.StackTrace : null
                 });
                 break;
 
-            case BusinessException businessEx:
+            case DbUpdateException dbEx:
+
                 context.Response.StatusCode = StatusCodes.Status400BadRequest;
+
+                await context.Response.WriteAsJsonAsync(new
+                {
+                    error = "Database update failed",
+                    message = isDevelopment ? dbEx.Message : null,
+                    inner = isDevelopment ? innerMessage : null,
+                    baseError = isDevelopment ? baseMessage : null,
+                    detail = isDevelopment ? dbEx.StackTrace : null
+                });
+                break;
+
+            case BusinessException businessEx:
+
+                context.Response.StatusCode = StatusCodes.Status400BadRequest;
+
                 await context.Response.WriteAsJsonAsync(new
                 {
                     error = businessEx.Message
@@ -58,7 +85,9 @@ public class GlobalExceptionMiddleware
                 break;
 
             case KeyNotFoundException notFoundEx:
+
                 context.Response.StatusCode = StatusCodes.Status404NotFound;
+
                 await context.Response.WriteAsJsonAsync(new
                 {
                     error = notFoundEx.Message
@@ -66,11 +95,15 @@ public class GlobalExceptionMiddleware
                 break;
 
             default:
+
                 context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+
                 await context.Response.WriteAsJsonAsync(new
                 {
                     error = "An unexpected error occurred",
                     message = isDevelopment ? exception.Message : null,
+                    inner = isDevelopment ? innerMessage : null,
+                    baseError = isDevelopment ? baseMessage : null,
                     detail = isDevelopment ? exception.StackTrace : null
                 });
                 break;

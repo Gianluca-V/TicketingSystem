@@ -121,7 +121,7 @@ const search  = ref('')
 // Form state
 const showForm   = ref(false)
 const editTarget = ref(null)
-const form       = ref({ name: '', date: '', venue: '' })
+const form       = ref({ name: '', date: '', venue: '', status: 'Active' })
 const formError  = ref(null)
 const saving     = ref(false)
 
@@ -154,7 +154,7 @@ async function load() {
 
 function openCreate() {
   editTarget.value = null
-  form.value = { name: '', date: '', venue: '' }
+  form.value = { name: '', date: '', venue: '', status: 'Active' }
   formError.value = null
   showForm.value  = true
 }
@@ -162,7 +162,7 @@ function openEdit(ev) {
   editTarget.value = ev
   // Convert ISO date to datetime-local format
   const d = ev.date ? new Date(ev.date).toISOString().slice(0, 16) : ''
-  form.value = { name: ev.name, date: d, venue: ev.venue }
+  form.value = { name: ev.name, date: d, venue: ev.venue, status: ev.status ?? 'Active' }
   formError.value = null
   showForm.value  = true
 }
@@ -175,7 +175,10 @@ async function handleSave() {
   saving.value = true; formError.value = null
   try {
     if (editTarget.value) {
-      await adminEventsApi.update(editTarget.value.id, form.value)
+      await adminEventsApi.update(editTarget.value.id, {
+        ...form.value,
+        id: editTarget.value.id
+      })
     } else {
       await adminEventsApi.create(form.value)
     }

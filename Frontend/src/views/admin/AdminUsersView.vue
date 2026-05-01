@@ -166,7 +166,11 @@ async function handleSave() {
 
   saving.value = true
   try {
-    const payload = { name: form.value.name, email: form.value.email }
+    const payload = { 
+      ...editTarget.value,
+      name: form.value.name, 
+      email: form.value.email 
+    }
     if (form.value.password) payload.password = form.value.password
     await adminUsersApi.update(editTarget.value.id, payload)
     

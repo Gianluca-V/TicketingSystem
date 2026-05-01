@@ -240,15 +240,16 @@ async function handleSave() {
   try {
     if (editTarget.value) {
       await adminSeatsApi.update(editTarget.value.id, {
+        ...editTarget.value,
         ...form.value,
-        eventId: props.eventId,
-        sectorId: props.sectorId
+        eventId: parseInt(props.eventId),
+        sectorId: parseInt(props.sectorId)
       })
     } else {
       await adminSeatsApi.create({
         ...form.value,
-        eventId: props.eventId,
-        sectorId: props.sectorId,
+        eventId: parseInt(props.eventId),
+        sectorId: parseInt(props.sectorId),
         price: sectorPrice.value
       })
     }

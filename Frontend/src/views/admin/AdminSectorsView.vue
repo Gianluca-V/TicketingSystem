@@ -145,7 +145,11 @@ async function handleSave() {
   saving.value = true; formError.value = null
   try {
     if (editTarget.value) {
-      await adminSectorsApi.update(props.eventId, editTarget.value.id, form.value)
+      await adminSectorsApi.update(props.eventId, editTarget.value.id, {
+        ...form.value,
+        id: editTarget.value.id,
+        eventId: parseInt(props.eventId)
+      })
     } else {
       await adminSectorsApi.create(props.eventId, { ...form.value, eventId: props.eventId })
     }

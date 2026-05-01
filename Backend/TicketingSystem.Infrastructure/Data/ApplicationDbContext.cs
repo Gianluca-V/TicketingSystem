@@ -106,8 +106,9 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<int>, i
             await SaveChangesAsync(cancellationToken);
             await _currentTransaction.CommitAsync(cancellationToken);
         }
-        catch
+        catch (Exception ex)
         {
+            Console.WriteLine(ex);
             await RollbackTransactionAsync(cancellationToken);
             throw;
         }

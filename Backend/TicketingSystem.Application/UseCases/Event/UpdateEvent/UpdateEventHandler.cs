@@ -24,38 +24,34 @@ public class UpdateEventHandler : ICommandHandler<UpdateEventCommand>
     public async Task Handle(UpdateEventCommand command, CancellationToken ct)
     {
         await _uow.BeginTransactionAsync(ct);
-        try
+
+        var @event = await _eventRepository.GetByIdAsync(command.Id, ct);
+        if (@event == null)
+            throw new Exception("Event not found");
+
+        @event.Name = command.Name;
+
+        if (command.Date is DateTime date)
+            @event.EventDate = DateTime.SpecifyKind(date, DateTimeKind.Utc);
+
+        @event.Venue = command.Venue;
+        @event.Status = command.Status;
+
+        await _eventRepository.UpdateAsync(@event, ct);
+
+        await _auditRepository.AddAsync(new AuditLog
         {
-            var @event = await _eventRepository.GetByIdAsync(command.Id, ct);
-            if (@event == null) throw new Exception("Event not found");
+            Action = AuditAction.Updated,
+            ResourceType = "Event",
+            ResourceId = @event.Id.ToString(),
+            Details = $"Event {@event.Name} updated",
+            UserId = _currentUserService.UserId ?? 0
+        }, ct);
 
-            @event.Name = command.Name;
-            if(command.Date is DateTime date) @event.EventDate = DateTime.SpecifyKind(date, DateTimeKind.Utc);
-            @event.Venue = command.Venue;
-            @event.Status = command.Status;
+        await _uow.CommitTransactionAsync(ct);
 
-            await _eventRepository.UpdateAsync(@event, ct);
-
-            await _auditRepository.AddAsync(new AuditLog
-            {
-                Action = AuditAction.Updated,
-                ResourceType = "Event",
-                ResourceId = @event.Id.ToString(),
-                Details = $"Event {@event.Name} updated",
-                UserId = _currentUserService.UserId ?? 0
-            }, ct);
-
-            await _uow.CommitTransactionAsync(ct);
-
-            // Invalidate cache
-            await _cacheService.RemoveAsync($"Event:{command.Id}", ct);
-            await _cacheService.RemoveByPrefixAsync("Events:List", ct);
-            await _cacheService.RemoveByPrefixAsync("AuditLogs:List", ct);
-        }
-        catch
-        {
-            await _uow.RollbackTransactionAsync(ct);
-            throw;
-        }
+        await _cacheService.RemoveAsync($"Event:{command.Id}", ct);
+        await _cacheService.RemoveByPrefixAsync("Events:List", ct);
+        await _cacheService.RemoveByPrefixAsync("AuditLogs:List", ct);
     }
 }

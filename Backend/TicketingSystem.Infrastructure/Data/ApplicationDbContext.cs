@@ -113,8 +113,9 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<int>, i
         }
         finally
         {
-            _currentTransaction.Dispose();
+            var transaction = _currentTransaction;
             _currentTransaction = null;
+            transaction?.Dispose();
         }
     }
 

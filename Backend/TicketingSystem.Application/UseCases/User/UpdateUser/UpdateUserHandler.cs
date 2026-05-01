@@ -19,8 +19,6 @@ public class UpdateUserHandler : ICommandHandler<UpdateUserCommand>
         _userManager = userManager;
         _auditRepository = auditRepository;
         _cacheService = cacheService;
-        _uow = userManager != null ? (IUnitOfWork)userManager.Users.Context : uow; // Fallback if UOW not injected correctly via CTOR
-        // Note: Better to rely on DI, but ensuring safety.
         _uow = uow;
     }
 

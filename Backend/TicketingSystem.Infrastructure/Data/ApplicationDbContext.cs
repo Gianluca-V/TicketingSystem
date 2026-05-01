@@ -99,10 +99,12 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<int>, i
 
     public async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
     {
+        if (_currentTransaction == null) return;
+
         try
         {
             await SaveChangesAsync(cancellationToken);
-            await _currentTransaction?.CommitAsync(cancellationToken)!;
+            await _currentTransaction.CommitAsync(cancellationToken);
         }
         catch
         {
@@ -111,20 +113,22 @@ public class ApplicationDbContext : IdentityDbContext<User, IdentityRole<int>, i
         }
         finally
         {
-            _currentTransaction?.Dispose();
+            _currentTransaction.Dispose();
             _currentTransaction = null;
         }
     }
 
     public async Task RollbackTransactionAsync(CancellationToken cancellationToken = default)
     {
+        if (_currentTransaction == null) return;
+
         try
         {
-            await _currentTransaction?.RollbackAsync(cancellationToken)!;
+            await _currentTransaction.RollbackAsync(cancellationToken);
         }
         finally
         {
-            _currentTransaction?.Dispose();
+            _currentTransaction.Dispose();
             _currentTransaction = null;
         }
     }

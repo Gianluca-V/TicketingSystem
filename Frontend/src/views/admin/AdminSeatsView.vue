@@ -244,17 +244,15 @@ async function handleSave() {
         eventId: props.eventId,
         sectorId: props.sectorId
       })
-      const i = seats.value.findIndex(s => s.id === editTarget.value.id)
-      if (i !== -1) seats.value[i] = { ...seats.value[i], ...form.value }
     } else {
-      const c = await adminSeatsApi.create({
+      await adminSeatsApi.create({
         ...form.value,
         eventId: props.eventId,
         sectorId: props.sectorId,
         price: sectorPrice.value
       })
-      seats.value.push(c)
     }
+    await load()
     showForm.value = false
   } catch (e) { formError.value = e.message }
   finally { saving.value = false }
@@ -284,8 +282,8 @@ async function handleBulkCreate() {
 async function handleDelete() {
   deleting.value = true
   try {
-    await adminSeatsApi.delete(deleteTarget.value.id)
-    seats.value = seats.value.filter(s => s.id !== deleteTarget.value.id)
+    await adminSeatsApi.delete(props.eventId, props.sectorId, deleteTarget.value.id)
+    await load()
     showDelete.value = false
   } catch (e) { error.value = e.message }
   finally { deleting.value = false }

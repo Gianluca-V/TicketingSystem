@@ -170,12 +170,7 @@ async function handleSave() {
     if (form.value.password) payload.password = form.value.password
     await adminUsersApi.update(editTarget.value.id, payload)
     
-    // Update local state manually since server returns 204
-    const idx = users.value.findIndex(u => u.id === editTarget.value.id)
-    if (idx !== -1) {
-      users.value[idx] = { ...users.value[idx], name: payload.name, email: payload.email }
-    }
-    
+    await load()
     showForm.value = false
   } catch (e) { formError.value = e.message }
   finally { saving.value = false }
@@ -185,7 +180,7 @@ async function handleDelete() {
   deleting.value = true
   try {
     await adminUsersApi.delete(deleteTarget.value.id)
-    users.value = users.value.filter(u => u.id !== deleteTarget.value.id)
+    await load()
     showDelete.value = false
   } catch (e) { error.value = e.message }
   finally { deleting.value = false }

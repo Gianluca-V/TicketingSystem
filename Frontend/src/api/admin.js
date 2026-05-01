@@ -65,13 +65,13 @@ export const adminSeatsApi = {
     client.get(E.SEATS(eventId, sectorId)).then((r) => r.data),
 
   create: (payload) =>
-    client.post(E.SEATS, payload).then((r) => r.data),
+    client.post(E.SEATS(payload.eventId, payload.sectorId), payload).then((r) => r.data),
 
   createBulk: (eventId, sectorId, seats) =>
     client.post(`${E.SEATS(eventId, sectorId)}/bulk`, seats).then((r) => r.data),
 
-  update: (eventId, sectorId, id, payload) =>
-    client.put(E.SEAT(eventId, sectorId, id), payload).then((r) => r.data),
+  update: (id, payload) =>
+    client.put(E.SEAT(payload.eventId, payload.sectorId, id), payload).then((r) => r.data),
 
   delete: (eventId, sectorId, id) =>
     client.delete(E.SEAT(eventId, sectorId, id)).then((r) => r.data),

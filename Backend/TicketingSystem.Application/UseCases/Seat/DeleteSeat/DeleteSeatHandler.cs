@@ -8,12 +8,14 @@ public class DeleteSeatHandler : ICommandHandler<DeleteSeatCommand>
 {
     private readonly ISeatRepository _seatRepository;
     private readonly IAuditRepository _auditRepository;
+    private readonly ICacheService _cacheService;
     private readonly IUnitOfWork _uow;
 
-    public DeleteSeatHandler(ISeatRepository seatRepository, IAuditRepository auditRepository, IUnitOfWork uow)
+    public DeleteSeatHandler(ISeatRepository seatRepository, IAuditRepository auditRepository, ICacheService cacheService, IUnitOfWork uow)
     {
         _seatRepository = seatRepository;
         _auditRepository = auditRepository;
+        _cacheService = cacheService;
         _uow = uow;
     }
 
@@ -37,6 +39,9 @@ public class DeleteSeatHandler : ICommandHandler<DeleteSeatCommand>
             }, ct);
 
             await _uow.CommitTransactionAsync(ct);
+
+            // Invalidate cache
+            await _cacheService.RemoveByPrefixAsync("Seats:List", ct);
         }
         catch
         {

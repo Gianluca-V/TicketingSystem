@@ -8,12 +8,14 @@ public class UpdateSeatHandler : ICommandHandler<UpdateSeatCommand>
 {
     private readonly ISeatRepository _seatRepository;
     private readonly IAuditRepository _auditRepository;
+    private readonly ICacheService _cacheService;
     private readonly IUnitOfWork _uow;
 
-    public UpdateSeatHandler(ISeatRepository seatRepository, IAuditRepository auditRepository, IUnitOfWork uow)
+    public UpdateSeatHandler(ISeatRepository seatRepository, IAuditRepository auditRepository, ICacheService cacheService, IUnitOfWork uow)
     {
         _seatRepository = seatRepository;
         _auditRepository = auditRepository;
+        _cacheService = cacheService;
         _uow = uow;
     }
 
@@ -42,6 +44,9 @@ public class UpdateSeatHandler : ICommandHandler<UpdateSeatCommand>
             }, ct);
 
             await _uow.CommitTransactionAsync(ct);
+
+            // Invalidate cache
+            await _cacheService.RemoveByPrefixAsync("Seats:List", ct);
         }
         catch
         {

@@ -145,13 +145,11 @@ async function handleSave() {
   saving.value = true; formError.value = null
   try {
     if (editTarget.value) {
-      const u = await adminSectorsApi.update(props.eventId, editTarget.value.id, form.value)
-      const i = sectors.value.findIndex(s => s.id === editTarget.value.id)
-      if (i !== -1) sectors.value[i] = { ...sectors.value[i], ...u }
+      await adminSectorsApi.update(props.eventId, editTarget.value.id, form.value)
     } else {
-      const c = await adminSectorsApi.create(props.eventId, { ...form.value, eventId: props.eventId })
-      sectors.value.push(c)
+      await adminSectorsApi.create(props.eventId, { ...form.value, eventId: props.eventId })
     }
+    await load()
     showForm.value = false
   } catch (e) { formError.value = e.message }
   finally     { saving.value = false }
@@ -161,7 +159,7 @@ async function handleDelete() {
   deleting.value = true
   try {
     await adminSectorsApi.delete(props.eventId, deleteTarget.value.id)
-    sectors.value = sectors.value.filter(s => s.id !== deleteTarget.value.id)
+    await load()
     showDelete.value = false
   } catch (e) { error.value = e.message }
   finally     { deleting.value = false }

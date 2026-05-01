@@ -175,13 +175,11 @@ async function handleSave() {
   saving.value = true; formError.value = null
   try {
     if (editTarget.value) {
-      const updated = await adminEventsApi.update(editTarget.value.id, form.value)
-      const idx = events.value.findIndex(e => e.id === editTarget.value.id)
-      if (idx !== -1) events.value[idx] = { ...events.value[idx], ...updated }
+      await adminEventsApi.update(editTarget.value.id, form.value)
     } else {
-      const created = await adminEventsApi.create(form.value)
-      events.value.unshift(created)
+      await adminEventsApi.create(form.value)
     }
+    await load()
     showForm.value = false
   } catch (e) { formError.value = e.message }
   finally     { saving.value = false }
@@ -192,7 +190,7 @@ async function handleDelete() {
   deleting.value = true
   try {
     await adminEventsApi.delete(deleteTarget.value.id)
-    events.value = events.value.filter(e => e.id !== deleteTarget.value.id)
+    await load()
     showDelete.value = false
   } catch (e) { error.value = e.message }
   finally     { deleting.value = false }

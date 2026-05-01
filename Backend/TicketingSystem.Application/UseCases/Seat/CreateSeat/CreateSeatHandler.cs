@@ -24,6 +24,9 @@ public class CreateSeatHandler : ICommandHandler<CreateSeatCommand, int>
 
     public async Task<int> Handle(CreateSeatCommand command, CancellationToken ct)
     {
+        if (string.IsNullOrWhiteSpace(command.SeatNumber))
+            throw new BusinessException("Seat number cannot be empty.");
+
         await _uow.BeginTransactionAsync(ct);
         try
         {

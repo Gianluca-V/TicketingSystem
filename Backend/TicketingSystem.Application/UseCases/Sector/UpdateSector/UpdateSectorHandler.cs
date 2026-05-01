@@ -1,6 +1,7 @@
 using TicketingSystem.Application.Interfaces.persistence;
 using TicketingSystem.Application.Interfaces.Services;
 using TicketingSystem.Domain.Entities;
+using TicketingSystem.Domain.Exceptions;
 
 namespace TicketingSystem.Application.UseCases.Sector.UpdateSector;
 
@@ -21,6 +22,15 @@ public class UpdateSectorHandler : ICommandHandler<UpdateSectorCommand>
 
     public async Task Handle(UpdateSectorCommand command, CancellationToken ct)
     {
+        if (command.Name != null && string.IsNullOrWhiteSpace(command.Name))
+            throw new BusinessException("Sector name cannot be empty.");
+
+        if (command.Price.HasValue && command.Price.Value < 0)
+            throw new BusinessException("Sector price cannot be negative.");
+
+        if (command.Capacity.HasValue && command.Capacity.Value <= 0)
+            throw new BusinessException("Sector capacity must be greater than zero.");
+
         await _uow.BeginTransactionAsync(ct);
         try
         {

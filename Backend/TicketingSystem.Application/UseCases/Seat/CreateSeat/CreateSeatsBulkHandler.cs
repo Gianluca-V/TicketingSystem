@@ -32,6 +32,12 @@ public class CreateSeatsBulkHandler : ICommandHandler<CreateSeatsBulkCommand, IE
 
     public async Task<IEnumerable<int>> Handle(CreateSeatsBulkCommand command, CancellationToken ct)
     {
+        if (command.Seats == null || !command.Seats.Any())
+            throw new BusinessException("Seat list cannot be empty.");
+
+        if (command.Seats.Any(s => string.IsNullOrWhiteSpace(s.SeatNumber)))
+            throw new BusinessException("All seats must have a valid number.");
+
         await _uow.BeginTransactionAsync(ct);
         try
         {

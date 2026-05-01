@@ -1,6 +1,7 @@
 using TicketingSystem.Application.Interfaces.persistence;
 using TicketingSystem.Application.Interfaces.Services;
 using TicketingSystem.Domain.Entities;
+using TicketingSystem.Domain.Exceptions;
 
 namespace TicketingSystem.Application.UseCases.Sector.CreateSector;
 
@@ -23,6 +24,15 @@ public class CreateSectorHandler : ICommandHandler<CreateSectorCommand, int>
 
     public async Task<int> Handle(CreateSectorCommand command, CancellationToken ct)
     {
+        if (string.IsNullOrWhiteSpace(command.Name))
+            throw new BusinessException("Sector name cannot be empty.");
+
+        if (command.Price < 0)
+            throw new BusinessException("Sector price cannot be negative.");
+
+        if (command.Capacity <= 0)
+            throw new BusinessException("Sector capacity must be greater than zero.");
+
         await _uow.BeginTransactionAsync(ct);
         try
         {

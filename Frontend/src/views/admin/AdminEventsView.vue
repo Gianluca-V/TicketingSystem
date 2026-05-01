@@ -172,7 +172,22 @@ function openDelete(ev) {
 }
 
 async function handleSave() {
-  saving.value = true; formError.value = null
+  formError.value = null
+
+  if (!form.value.name) {
+    formError.value = 'El nombre del evento es obligatorio.'
+    return
+  }
+  if (!form.value.venue) {
+    formError.value = 'La dirección del evento es obligatoria.'
+    return
+  }
+  if (!form.value.date) {
+    formError.value = 'La fecha del evento es obligatoria.'
+    return
+  }
+
+  saving.value = true
   try {
     if (editTarget.value) {
       await adminEventsApi.update(editTarget.value.id, {

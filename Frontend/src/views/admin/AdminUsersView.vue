@@ -152,6 +152,11 @@ function openDelete(u) { deleteTarget.value = u; showDelete.value = true }
 async function handleSave() {
   formError.value = null
   
+  if (!form.value.name) {
+    formError.value = 'El nombre es obligatorio.'
+    return
+  }
+
   // Validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!emailRegex.test(form.value.email)) {

@@ -3,6 +3,7 @@ using TicketingSystem.Application.Interfaces.persistence;
 using TicketingSystem.Application.Interfaces.Services;
 using DomainUser = TicketingSystem.Domain.Entities.User;
 using TicketingSystem.Domain.Entities;
+using TicketingSystem.Domain.Exceptions;
 
 namespace TicketingSystem.Application.UseCases.User.UpdateUser;
 
@@ -18,11 +19,22 @@ public class UpdateUserHandler : ICommandHandler<UpdateUserCommand>
         _userManager = userManager;
         _auditRepository = auditRepository;
         _cacheService = cacheService;
+        _uow = userManager != null ? (IUnitOfWork)userManager.Users.Context : uow; // Fallback if UOW not injected correctly via CTOR
+        // Note: Better to rely on DI, but ensuring safety.
         _uow = uow;
     }
 
     public async Task Handle(UpdateUserCommand command, CancellationToken ct)
     {
+        if (command.Name != null && string.IsNullOrWhiteSpace(command.Name))
+            throw new BusinessException("User name cannot be empty.");
+
+        if (command.Email != null && string.IsNullOrWhiteSpace(command.Email))
+            throw new BusinessException("User email cannot be empty.");
+
+        if (command.Password != null && command.Password.Length < 8)
+            throw new BusinessException("Password must be at least 8 characters long.");
+
         await _uow.BeginTransactionAsync(ct);
         try
         {

@@ -142,7 +142,22 @@ function openEdit(s) {
 function openDelete(s) { deleteTarget.value = s; showDelete.value = true }
 
 async function handleSave() {
-  saving.value = true; formError.value = null
+  formError.value = null
+
+  if (!form.value.name) {
+    formError.value = 'El nombre del sector es obligatorio.'
+    return
+  }
+  if (form.value.price < 0) {
+    formError.value = 'El precio no puede ser negativo.'
+    return
+  }
+  if (form.value.capacity <= 0) {
+    formError.value = 'La capacidad debe ser al menos 1.'
+    return
+  }
+
+  saving.value = true
   try {
     if (editTarget.value) {
       await adminSectorsApi.update(props.eventId, editTarget.value.id, {

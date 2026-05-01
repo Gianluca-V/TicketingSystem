@@ -239,6 +239,12 @@ function openDelete(s) { deleteTarget.value = s; showDelete.value = true }
 
 async function handleSave() {
   formError.value = null
+  
+  if (!form.value.seatNumber) {
+    formError.value = 'El número de asiento es obligatorio.'
+    return
+  }
+
   if (!editTarget.value && seats.value.length >= sectorCapacity.value) {
     formError.value = `Se ha alcanzado la capacidad máxima del sector (${sectorCapacity.value}).`
     return
@@ -269,6 +275,17 @@ async function handleSave() {
 
 async function handleBulkCreate() {
   bulkError.value = null
+
+  if (bulk.value.count <= 0) {
+    bulkError.value = 'La cantidad de asientos debe ser mayor a 0.'
+    return
+  }
+
+  if (bulk.value.start <= 0) {
+    bulkError.value = 'El número inicial debe ser mayor a 0.'
+    return
+  }
+
   if (seats.value.length + bulk.value.count > sectorCapacity.value) {
     bulkError.value = `La cantidad de asientos excede la capacidad del sector (${sectorCapacity.value}). Disponibles: ${sectorCapacity.value - seats.value.length}.`
     return

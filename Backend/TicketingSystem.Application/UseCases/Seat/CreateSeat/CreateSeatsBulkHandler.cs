@@ -1,6 +1,7 @@
 using TicketingSystem.Application.Interfaces.persistence;
 using TicketingSystem.Application.Interfaces.Services;
 using TicketingSystem.Domain.Entities;
+using TicketingSystem.Domain.Exceptions;
 
 namespace TicketingSystem.Application.UseCases.Seat.CreateSeat;
 
@@ -36,6 +37,13 @@ public class CreateSeatsBulkHandler : ICommandHandler<CreateSeatsBulkCommand, IE
         {
             var sector = await _sectorRepository.GetByIdAsync(command.SectorId, ct);
             if (sector == null) throw new Exception("Sector not found");
+
+            // Capacity validation
+            var currentSeatsCount = await _seatRepository.CountBySectorAsync(command.SectorId, ct);
+            if (currentSeatsCount + command.Seats.Count > sector.Capacity)
+            {
+                throw new BusinessException($"Cannot create {command.Seats.Count} seats. Sector capacity is {sector.Capacity} and it already has {currentSeatsCount} seats.");
+            }
 
             var seats = command.Seats.Select(s => new TicketingSystem.Domain.Entities.Seat
             {

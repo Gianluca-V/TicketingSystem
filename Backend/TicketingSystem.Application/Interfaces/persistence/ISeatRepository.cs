@@ -11,4 +11,5 @@ public interface ISeatRepository
     Task AddBulkAsync(IEnumerable<Seat> seats, CancellationToken cancellationToken = default);
     Task UpdateAsync(Seat seat, CancellationToken cancellationToken = default);
     Task DeleteAsync(int id, CancellationToken cancellationToken = default);
+    Task<int> CountBySectorAsync(int sectorId, CancellationToken ct = default);
 }

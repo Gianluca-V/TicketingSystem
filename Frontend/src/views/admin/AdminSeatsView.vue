@@ -163,6 +163,7 @@ const props = defineProps({
 const seats       = ref([])
 const sectorName  = ref('')
 const sectorPrice = ref(0)
+const sectorCapacity = ref(0)
 const loading     = ref(false)
 const error       = ref(null)
 const search      = ref('')
@@ -211,6 +212,7 @@ async function load() {
     ])
     sectorName.value = sec.name
     sectorPrice.value = sec.price
+    sectorCapacity.value = sec.capacity
     const rawSeats = Array.isArray(seatList) ? seatList : seatList?.items ?? []
     seats.value = rawSeats.sort((a, b) => 
       a.seatNumber.localeCompare(b.seatNumber, undefined, { numeric: true })
@@ -236,7 +238,13 @@ function openBulk() {
 function openDelete(s) { deleteTarget.value = s; showDelete.value = true }
 
 async function handleSave() {
-  saving.value = true; formError.value = null
+  formError.value = null
+  if (!editTarget.value && seats.value.length >= sectorCapacity.value) {
+    formError.value = `Se ha alcanzado la capacidad máxima del sector (${sectorCapacity.value}).`
+    return
+  }
+
+  saving.value = true
   try {
     if (editTarget.value) {
       await adminSeatsApi.update(editTarget.value.id, {
@@ -260,7 +268,13 @@ async function handleSave() {
 }
 
 async function handleBulkCreate() {
-  bulkSaving.value = true; bulkError.value = null
+  bulkError.value = null
+  if (seats.value.length + bulk.value.count > sectorCapacity.value) {
+    bulkError.value = `La cantidad de asientos excede la capacidad del sector (${sectorCapacity.value}). Disponibles: ${sectorCapacity.value - seats.value.length}.`
+    return
+  }
+
+  bulkSaving.value = true
   const pre = bulk.value.prefix ? `${bulk.value.prefix}-` : ''
   const payload = []
   for (let i = 0; i < bulk.value.count; i++) {

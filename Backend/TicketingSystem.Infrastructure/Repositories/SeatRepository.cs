@@ -68,4 +68,9 @@ public class SeatRepository : ISeatRepository
             _context.Seats.Remove(seat);
         }
     }
+
+    public async Task<int> CountBySectorAsync(int sectorId, CancellationToken ct = default)
+    {
+        return await _context.Seats.CountAsync(s => s.SectorId == sectorId, ct);
+    }
 }

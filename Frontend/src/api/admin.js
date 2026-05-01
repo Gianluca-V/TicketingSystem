@@ -17,7 +17,7 @@ export const adminUsersApi = {
     client.get(E.USER(id)).then((r) => r.data),
 
   update: (id, payload) =>
-    client.put(E.USER(id), payload).then((r) => r.data),
+    client.patch(E.USER(id), payload).then((r) => r.data),
 
   delete: (id) =>
     client.delete(E.USER(id)).then((r) => r.data),

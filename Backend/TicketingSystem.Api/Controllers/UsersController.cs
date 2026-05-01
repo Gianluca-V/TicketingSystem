@@ -44,7 +44,7 @@ public class UsersController : ControllerBase
     /// <summary>
     /// Update an existing user
     /// </summary>
-    [HttpPut("{id}")]
+    [HttpPatch("{id}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateUserCommand command, CancellationToken ct)
     {
         command.Id = id;

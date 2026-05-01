@@ -29,7 +29,7 @@
 *   **URL**: `/users`
 *   **Method**: `GET` (List), `POST` (Register)
 *   **URL**: `/users/{id}`
-*   **Method**: `GET`, `PUT`, `DELETE`
+*   **Method**: `GET`, `PATCH`, `DELETE`
 *   **Query Params (List)**: `Name`, `Email`, `Page`, `Take`
 
 ---

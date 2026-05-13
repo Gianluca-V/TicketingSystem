@@ -59,22 +59,48 @@
           </div>
 
           <template v-else>
-            <VenueMap
-              :sectors="sectors.slice(0, 12)"
-              :active-id="hoveredSectorId"
-              @select="s => $router.push(`/events/${eventId}/sectors/${s.id}/seats`)"
-            />
+            <!-- Venue map (when sector names are recognizable) -->
+            <template v-if="useVenueMap">
+              <VenueMap
+                :sectors="sectors.slice(0, 12)"
+                :active-id="hoveredSectorId"
+                @select="s => $router.push(`/events/${eventId}/sectors/${s.id}/seats`)"
+              />
 
-            <div v-if="sectors.length > 12" class="overflow-sectors">
-              <p class="overflow-label">Otros sectores</p>
-              <div class="overflow-chips">
-                <router-link
-                  v-for="s in sectors.slice(12)"
-                  :key="s.id"
-                  :to="`/events/${eventId}/sectors/${s.id}/seats`"
-                  class="sector-chip"
-                >{{ s.name }} · ${{ s.price?.toLocaleString('es-AR') }}</router-link>
+              <div v-if="sectors.length > 12" class="overflow-sectors">
+                <p class="overflow-label">Otros sectores</p>
+                <div class="overflow-chips">
+                  <router-link
+                    v-for="s in sectors.slice(12)"
+                    :key="s.id"
+                    :to="`/events/${eventId}/sectors/${s.id}/seats`"
+                    class="sector-chip"
+                  >{{ s.name }} · ${{ s.price?.toLocaleString('es-AR') }}</router-link>
+                </div>
               </div>
+            </template>
+
+            <!-- Fallback: card grid for events with unrecognized sector names -->
+            <div v-else class="sectors-grid">
+              <router-link
+                v-for="(s, i) in sectors"
+                :key="s.id"
+                :to="`/events/${eventId}/sectors/${s.id}/seats`"
+                class="sector-card card fade-in"
+                :style="{ animationDelay: `${i * 0.08}s` }"
+              >
+                <div class="sector-header">
+                  <h3 class="sector-name">{{ s.name }}</h3>
+                  <span class="sector-price">${{ s.price?.toLocaleString('es-AR') }}</span>
+                </div>
+                <div class="sector-meta">
+                  <span class="capacity-wrap">
+                    <span class="capacity-label">Capacidad</span>
+                    <span class="capacity-val">{{ s.capacity }}</span>
+                  </span>
+                  <span class="arrow">→</span>
+                </div>
+              </router-link>
             </div>
           </template>
         </section>
@@ -98,6 +124,14 @@ const sectors        = ref([])
 const loading        = ref(false)
 const sectorsLoading = ref(false)
 const error          = ref(null)
+
+const MAP_KEYWORDS = ['vip', 'pit', 'campo', 'platea', 'izquierda', 'derecha', 'tribuna', 'palco']
+
+const useVenueMap = computed(() =>
+  sectors.value.some(s =>
+    MAP_KEYWORDS.some(kw => s.name.toLowerCase().includes(kw))
+  )
+)
 
 const formattedDate = computed(() => {
   if (!event.value?.date) return '—'
@@ -281,6 +315,60 @@ onMounted(async () => {
   transition: border-color var(--t-fast), color var(--t-fast);
 }
 .sector-chip:hover { border-color: var(--c-gold-dim); color: var(--c-gold); }
+
+/* ── Fallback sector cards ───────────────────────────────────────────────────── */
+.sectors-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--space-md);
+}
+
+.sector-card {
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  cursor: pointer;
+  transition: border-color var(--t-base), transform var(--t-base), box-shadow var(--t-base);
+}
+.sector-card:hover {
+  border-color: var(--c-gold-dim);
+  box-shadow: var(--shadow-gold);
+  transform: translateY(-2px);
+}
+.sector-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.sector-name {
+  font-family: var(--f-display);
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--c-text);
+}
+.sector-price {
+  font-family: var(--f-mono);
+  font-size: .82rem;
+  color: var(--c-gold);
+  white-space: nowrap;
+}
+.sector-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: .75rem;
+  color: var(--c-text-3);
+}
+.capacity-wrap   { display: flex; gap: 6px; }
+.capacity-label  { text-transform: uppercase; letter-spacing: .06em; }
+.capacity-val    { font-family: var(--f-mono); color: var(--c-text-2); }
+.arrow {
+  color: var(--c-gold);
+  transition: transform var(--t-fast);
+}
+.sector-card:hover .arrow { transform: translateX(4px); }
 
 .empty-state {
   padding: var(--space-xl);

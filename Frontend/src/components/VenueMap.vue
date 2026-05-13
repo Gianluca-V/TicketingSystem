@@ -15,60 +15,53 @@
         font-size="11" font-weight="700" letter-spacing="4"
       >ESCENARIO</text>
 
-      <!-- VIP / PIT strip -->
-      <rect
-        x="130" y="108" width="240" height="22" rx="5"
-        :fill="slotFill('vip', !!vipSector)"
-        :stroke="slotStroke('vip', !!vipSector)"
-        :stroke-width="hover === 'vip' ? 2 : 1"
-        :class="{ clickable: vipSector }"
-        @mouseenter="vipSector && (hover = 'vip')"
-        @click="vipSector && emit('select', vipSector)"
-      />
-      <text x="250" y="119"
-        text-anchor="middle" dominant-baseline="middle"
-        :fill="labelFill('vip', !!vipSector)"
-        font-family="Syne, sans-serif" font-size="9.5" font-weight="700" letter-spacing="3"
-        class="no-ptr"
-      >{{ vipSector ? vipSector.name.toUpperCase() : 'PIT' }}</text>
-
-      <!-- Campo sections (stacked: Delantero 30%, Trasero 70%) -->
-      <g
-        v-for="(campo, ci) in campoSectors" :key="`campo-${ci}`"
-        @mouseenter="hover = `campo-${ci}`"
-        @click="emit('select', campo)"
+      <!-- VIP / PIT strip (only when the sector exists) -->
+      <g v-if="vipSector"
+        @mouseenter="hover = 'vip'"
+        @click="emit('select', vipSector)"
       >
         <rect
-          x="130" :y="campoY(ci)" width="240" :height="campoH(ci)" rx="6"
-          :fill="slotFill(`campo-${ci}`, true)"
-          :stroke="slotStroke(`campo-${ci}`, true)"
-          :stroke-width="hover === `campo-${ci}` ? 2 : 1"
+          x="130" y="108" width="240" height="22" rx="5"
+          :fill="slotFill('vip', true)"
+          :stroke="slotStroke('vip', true)"
+          :stroke-width="isOn('vip') ? 2 : 1"
           class="clickable"
         />
-        <text
-          x="250" :y="campoY(ci) + campoH(ci) / 2 - 10"
+        <text x="250" y="119"
           text-anchor="middle" dominant-baseline="middle"
-          :fill="labelFill(`campo-${ci}`, true)"
-          font-family="Syne, sans-serif" font-size="9.5" font-weight="700" letter-spacing="1.5"
+          :fill="labelFill('vip', true)"
+          font-family="Syne, sans-serif" font-size="9.5" font-weight="700" letter-spacing="3"
           class="no-ptr"
-        >{{ campo.name.toUpperCase() }}</text>
-        <text
-          x="250" :y="campoY(ci) + campoH(ci) / 2 + 10"
-          text-anchor="middle"
-          :fill="priceFill(`campo-${ci}`)"
-          font-size="9" font-family="DM Mono, monospace"
-          class="no-ptr"
-        >${{ campo.price?.toLocaleString('es-AR') }}</text>
+        >{{ vipSector.name.toUpperCase() }}</text>
       </g>
 
-      <!-- Fallback when no campo sector -->
-      <g v-if="!campoSectors.length">
-        <rect x="130" y="138" width="240" height="268" rx="6"
-          fill="#0a0a0a" stroke="#191919" stroke-width="1" />
-        <text x="250" y="272"
+      <!-- Campo — single unified central area -->
+      <g
+        :class="{ clickable: campoSector }"
+        @mouseenter="campoSector && (hover = 'campo')"
+        @click="campoSector && emit('select', campoSector)"
+      >
+        <rect
+          x="130" :y="CAMPO_TOP" width="240" :height="CAMPO_FULL" rx="6"
+          :fill="slotFill('campo', !!campoSector)"
+          :stroke="slotStroke('campo', !!campoSector)"
+          :stroke-width="isOn('campo') ? 2 : 1"
+        />
+        <text
+          x="250" :y="CAMPO_TOP + CAMPO_FULL / 2 - 10"
           text-anchor="middle" dominant-baseline="middle"
-          fill="#252525" font-family="Syne, sans-serif" font-size="12" font-weight="700" letter-spacing="3"
-        >CAMPO</text>
+          :fill="labelFill('campo', !!campoSector)"
+          font-family="Syne, sans-serif" font-size="9.5" font-weight="700" letter-spacing="1.5"
+          class="no-ptr"
+        >{{ campoSector ? campoSector.name.toUpperCase() : 'CAMPO' }}</text>
+        <text
+          v-if="campoSector"
+          x="250" :y="CAMPO_TOP + CAMPO_FULL / 2 + 10"
+          text-anchor="middle"
+          :fill="priceFill('campo')"
+          font-size="9" font-family="DM Mono, monospace"
+          class="no-ptr"
+        >${{ campoSector.price?.toLocaleString('es-AR') }}</text>
       </g>
 
       <!-- Left side slots -->
@@ -147,6 +140,36 @@
         </template>
       </g>
 
+      <!-- Extra sectors — stacked strips at the back of the venue -->
+      <g
+        v-for="(sector, i) in extraSectors" :key="`extra-${i}`"
+        @mouseenter="hover = `extra-${i}`"
+        @click="emit('select', sector)"
+      >
+        <rect
+          :x="20" :y="EXTRA_TOP + i * (EXTRA_H + EXTRA_GAP)"
+          :width="W - 40" :height="EXTRA_H" rx="5"
+          :fill="slotFill(`extra-${i}`, true)"
+          :stroke="slotStroke(`extra-${i}`, true)"
+          :stroke-width="isOn(`extra-${i}`) ? 2 : 1"
+          class="clickable"
+        />
+        <text
+          :x="W / 2" :y="EXTRA_TOP + i * (EXTRA_H + EXTRA_GAP) + EXTRA_H / 2 - 8"
+          text-anchor="middle"
+          :fill="labelFill(`extra-${i}`, true)"
+          font-size="9" font-family="Syne, sans-serif" font-weight="700" letter-spacing="1"
+          class="no-ptr"
+        >{{ sector.name.toUpperCase() }}</text>
+        <text
+          :x="W / 2" :y="EXTRA_TOP + i * (EXTRA_H + EXTRA_GAP) + EXTRA_H / 2 + 8"
+          text-anchor="middle"
+          :fill="priceFill(`extra-${i}`)"
+          font-size="8.5" font-family="DM Mono, monospace"
+          class="no-ptr"
+        >${{ sector.price?.toLocaleString('es-AR') }}</text>
+      </g>
+
     </svg>
 
     <!-- Sector info bar -->
@@ -184,20 +207,13 @@ const emit = defineEmits(['select'])
 
 const hover = ref(null)
 
-const W = 500
-const H = 428
+const W          = 500
+const H_BASE     = 428
+const EXTRA_H    = 42
+const EXTRA_GAP  = 6
+const EXTRA_TOP  = 414  // CAMPO_BOTTOM (406) + 8px gap
 
-// ── Sector grouping ───────────────────────────────────────────────────────────
-
-const campoSectors = computed(() =>
-  props.sectors
-    .filter(s => s.name.toLowerCase().includes('campo'))
-    .sort((a, b) => {
-      const aD = a.name.toLowerCase().includes('delantero')
-      const bD = b.name.toLowerCase().includes('delantero')
-      return aD === bD ? 0 : aD ? -1 : 1
-    })
-)
+// ── Sector grouping — by name (position reflects meaning, not creation order) ─
 
 const vipSector = computed(() =>
   props.sectors.find(s =>
@@ -205,6 +221,22 @@ const vipSector = computed(() =>
   ) ?? null
 )
 
+// Single campo sector → full central area
+const campoSector = computed(() =>
+  props.sectors.find(s => s.name.toLowerCase().includes('campo')) ?? null
+)
+
+// Known side sectors keep their slot; generics fill remaining slots and go last
+function innerPriority(name) {
+  const n = name.toLowerCase()
+  if (n.includes('izquierda') && !n.trimEnd().endsWith('2')) return 0
+  if (n.includes('izquierda') &&  n.trimEnd().endsWith('2')) return 1
+  if (n.includes('derecha')   && !n.trimEnd().endsWith('2')) return 2
+  if (n.includes('derecha')   &&  n.trimEnd().endsWith('2')) return 3
+  return 4
+}
+
+// Side slots fill by creation order (first 4 non-VIP, non-campo sectors)
 const innerSectors = computed(() =>
   props.sectors
     .filter(s =>
@@ -212,74 +244,75 @@ const innerSectors = computed(() =>
       !s.name.toLowerCase().includes('vip') &&
       !s.name.toLowerCase().includes('pit')
     )
-    .sort((a, b) => {
-      const aLeft = a.name.toLowerCase().includes('izquierda')
-      const bLeft = b.name.toLowerCase().includes('izquierda')
-      if (aLeft !== bLeft) return aLeft ? -1 : 1
-      const aIs2 = a.name.trimEnd().endsWith('2')
-      const bIs2 = b.name.trimEnd().endsWith('2')
-      return aIs2 === bIs2 ? 0 : aIs2 ? 1 : -1
-    })
     .slice(0, 4)
 )
+
+const extraSectors = computed(() => {
+  const used = new Set([
+    vipSector.value?.id,
+    campoSector.value?.id,
+    ...innerSectors.value.map(s => s.id),
+  ].filter(Boolean))
+  return props.sectors.filter(s => !used.has(s.id))
+})
 
 const hoveredSector = computed(() => {
   const key = hover.value ?? activeKey.value
   if (!key) return null
-  if (key.startsWith('campo-')) return campoSectors.value[parseInt(key.split('-')[1])] ?? null
   if (key === 'vip')            return vipSector.value
+  if (key === 'campo')          return campoSector.value
   if (key.startsWith('l'))      return innerSectors.value[parseInt(key[1])] ?? null
   if (key.startsWith('r'))      return innerSectors.value[parseInt(key[1]) + 2] ?? null
+  if (key.startsWith('extra-')) return extraSectors.value[parseInt(key.split('-')[1])] ?? null
   return null
 })
 
 // ── Campo layout (Delantero 30%, Trasero 70%) ─────────────────────────────────
 
-const CAMPO_TOP  = 138
-const CAMPO_FULL = 268
-const CAMPO_GAP  = 8
-const CAMPO_RATIOS = [0.30, 0.70]
+const CAMPO_TOP  = computed(() => vipSector.value ? 138 : 108)
+const CAMPO_FULL = computed(() => 406 - CAMPO_TOP.value)
 
-const campoHeights = computed(() => {
-  const n = campoSectors.value.length
-  if (n <= 1) return [CAMPO_FULL]
-  const usable = CAMPO_FULL - (n - 1) * CAMPO_GAP
-  return CAMPO_RATIOS.slice(0, n).map(r => Math.round(usable * r))
+// ── Side slots — derived from CAMPO_TOP so they follow when VIP disappears ───
+
+const LSLOTS = computed(() => {
+  const top  = CAMPO_TOP.value
+  const full = CAMPO_FULL.value
+  const h1   = Math.round(full * 0.70)
+  const h2   = full - h1 - 8
+  return [
+    { x: 20,  y: top,         w: 102, h: h1 },
+    { x: 20,  y: top + h1 + 8, w: 102, h: h2 },
+  ]
 })
 
-function campoH(i) {
-  return campoHeights.value[i] ?? campoHeights.value[0]
-}
+const RSLOTS = computed(() => {
+  const top  = CAMPO_TOP.value
+  const full = CAMPO_FULL.value
+  const h1   = Math.round(full * 0.70)
+  const h2   = full - h1 - 8
+  return [
+    { x: 378, y: top,          w: 102, h: h1 },
+    { x: 378, y: top + h1 + 8, w: 102, h: h2 },
+  ]
+})
 
-function campoY(i) {
-  let y = CAMPO_TOP
-  for (let j = 0; j < i; j++) y += campoHeights.value[j] + CAMPO_GAP
-  return y
-}
-
-// ── Side slots (Platea 1 = 70% height, Platea 2 = 30%) ───────────────────────
-
-const LSLOTS = [
-  { x: 20,  y: 138, w: 102, h: 188 },
-  { x: 20,  y: 334, w: 102, h:  72 },
-]
-
-const RSLOTS = [
-  { x: 378, y: 138, w: 102, h: 188 },
-  { x: 378, y: 334, w: 102, h:  72 },
-]
+const H = computed(() => {
+  const n = extraSectors.value.length
+  return n > 0 ? H_BASE + n * (EXTRA_H + EXTRA_GAP) : H_BASE
+})
 
 // ── Active key: resolves activeId (from sidebar hover) to an internal slot key ─
 
 const activeKey = computed(() => {
   if (!props.activeId) return null
-  if (vipSector.value?.id === props.activeId)   return 'vip'
-  const ci = campoSectors.value.findIndex(s => s.id === props.activeId)
-  if (ci !== -1) return `campo-${ci}`
+  if (vipSector.value?.id   === props.activeId) return 'vip'
+  if (campoSector.value?.id === props.activeId) return 'campo'
   const li = innerSectors.value.findIndex((s, i) => i < 2  && s?.id === props.activeId)
   if (li !== -1) return `l${li}`
   const ri = innerSectors.value.findIndex((s, i) => i >= 2 && s?.id === props.activeId)
   if (ri !== -1) return `r${ri - 2}`
+  const ei = extraSectors.value.findIndex(s => s.id === props.activeId)
+  if (ei !== -1) return `extra-${ei}`
   return null
 })
 

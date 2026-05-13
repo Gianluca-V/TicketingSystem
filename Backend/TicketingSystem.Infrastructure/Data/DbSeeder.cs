@@ -40,12 +40,11 @@ public static class DbSeeder
         var sectors = new[]
         {
             new Sector { Name = "VIP",               EventId = concertEvent.Id, Event = concertEvent, Price = 200.00m, Capacity =  50 },
-            new Sector { Name = "Campo Delantero",   EventId = concertEvent.Id, Event = concertEvent, Price =  90.00m, Capacity = 120 },
-            new Sector { Name = "Campo Trasero",     EventId = concertEvent.Id, Event = concertEvent, Price =  50.00m, Capacity = 280 },
+            new Sector { Name = "Campo",             EventId = concertEvent.Id, Event = concertEvent, Price =  60.00m, Capacity = 400 },
             new Sector { Name = "Platea Izquierda",  EventId = concertEvent.Id, Event = concertEvent, Price = 140.00m, Capacity = 200 },
-            new Sector { Name = "Platea Izquierda 2",EventId = concertEvent.Id, Event = concertEvent, Price =  80.00m, Capacity =  85 },
+            new Sector { Name = "Platea Izquierda 2",EventId = concertEvent.Id, Event = concertEvent, Price =  80.00m, Capacity = 100 },
             new Sector { Name = "Platea Derecha",    EventId = concertEvent.Id, Event = concertEvent, Price = 140.00m, Capacity = 200 },
-            new Sector { Name = "Platea Derecha 2",  EventId = concertEvent.Id, Event = concertEvent, Price =  80.00m, Capacity =  85 },
+            new Sector { Name = "Platea Derecha 2",  EventId = concertEvent.Id, Event = concertEvent, Price =  80.00m, Capacity = 100 },
         };
 
         context.Sectors.AddRange(sectors);
@@ -54,12 +53,11 @@ public static class DbSeeder
         var seatDefs = new[]
         {
             (sectors[0], "VIP",   50,  200.00m),
-            (sectors[1], "CDEL", 120,   90.00m),
-            (sectors[2], "CTRA", 280,   50.00m),
-            (sectors[3], "PIZQ", 200,  140.00m),
-            (sectors[4], "PIZ2",  85,   80.00m),
-            (sectors[5], "PDER", 200,  140.00m),
-            (sectors[6], "PDR2",  85,   80.00m),
+            (sectors[1], "CAM",  400,   60.00m),
+            (sectors[2], "PIZQ", 200,  140.00m),
+            (sectors[3], "PIZ2", 100,   80.00m),
+            (sectors[4], "PDER", 200,  140.00m),
+            (sectors[5], "PDR2", 100,   80.00m),
         };
 
         foreach (var (sector, prefix, count, price) in seatDefs)

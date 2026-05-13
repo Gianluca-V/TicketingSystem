@@ -20,63 +20,60 @@ public static class DbSeeder
             // If table doesn't exist, proceed with seeding
         }
 
-        // Create event
         var concertEvent = new Event
         {
-            Name = "Rock Festival 2026",
+            Name      = "Rock Festival 2026",
             EventDate = new DateTime(2026, 8, 15, 20, 0, 0, DateTimeKind.Utc),
-            Venue = "Wembley Stadium",
-            Status = "Active"
+            Venue     = "Estadio Obras Sanitarias",
+            Status    = "Active"
         };
 
         context.Events.Add(concertEvent);
         await context.SaveChangesAsync();
 
-        // Create sectors
-        var vipSector = new Sector
+        // Layout del mapa (igual a la captura de referencia):
+        //   VIP               → tira PIT debajo del escenario
+        //   Campo Delantero   → mitad superior del área central
+        //   Campo General     → mitad inferior del área central
+        //   Platea 1 Izq/Der  → fila superior de los costados
+        //   Platea 2 Izq/Der  → fila inferior de los costados
+        var sectors = new[]
         {
-            Name = "VIP",
-            EventId = concertEvent.Id,
-            Event = concertEvent, // EF needs the navigation for validation if required
-            Price = 150.00m,
-            Capacity = 50
+            new Sector { Name = "VIP",               EventId = concertEvent.Id, Event = concertEvent, Price = 200.00m, Capacity =  50 },
+            new Sector { Name = "Campo Delantero",   EventId = concertEvent.Id, Event = concertEvent, Price =  90.00m, Capacity = 120 },
+            new Sector { Name = "Campo Trasero",     EventId = concertEvent.Id, Event = concertEvent, Price =  50.00m, Capacity = 280 },
+            new Sector { Name = "Platea Izquierda",  EventId = concertEvent.Id, Event = concertEvent, Price = 140.00m, Capacity = 200 },
+            new Sector { Name = "Platea Izquierda 2",EventId = concertEvent.Id, Event = concertEvent, Price =  80.00m, Capacity =  85 },
+            new Sector { Name = "Platea Derecha",    EventId = concertEvent.Id, Event = concertEvent, Price = 140.00m, Capacity = 200 },
+            new Sector { Name = "Platea Derecha 2",  EventId = concertEvent.Id, Event = concertEvent, Price =  80.00m, Capacity =  85 },
         };
 
-        var generalSector = new Sector
-        {
-            Name = "General",
-            EventId = concertEvent.Id,
-            Event = concertEvent,
-            Price = 75.00m,
-            Capacity = 50
-        };
-
-        context.Sectors.Add(vipSector);
-        context.Sectors.Add(generalSector);
+        context.Sectors.AddRange(sectors);
         await context.SaveChangesAsync();
 
-        // Create 50 VIP seats
-        for (int i = 1; i <= 50; i++)
+        var seatDefs = new[]
         {
-            context.Seats.Add(new Seat
-            {
-                SectorId = vipSector.Id,
-                SeatNumber = $"VIP-{i:D3}",
-                Price = 150.00m,
-                Status = SeatStatus.Available
-            });
-        }
+            (sectors[0], "VIP",   50,  200.00m),
+            (sectors[1], "CDEL", 120,   90.00m),
+            (sectors[2], "CTRA", 280,   50.00m),
+            (sectors[3], "PIZQ", 200,  140.00m),
+            (sectors[4], "PIZ2",  85,   80.00m),
+            (sectors[5], "PDER", 200,  140.00m),
+            (sectors[6], "PDR2",  85,   80.00m),
+        };
 
-        // Create 50 General seats
-        for (int i = 1; i <= 50; i++)
+        foreach (var (sector, prefix, count, price) in seatDefs)
         {
-            context.Seats.Add(new Seat
+            for (int n = 1; n <= count; n++)
             {
-                SectorId = generalSector.Id,
-                SeatNumber = $"GEN-{i:D3}",
-                Price = 75.00m,
-                Status = SeatStatus.Available
-            });
+                context.Seats.Add(new Seat
+                {
+                    SectorId   = sector.Id,
+                    SeatNumber = $"{prefix}-{n:D3}",
+                    Price      = price,
+                    Status     = SeatStatus.Available
+                });
+            }
         }
 
         await context.SaveChangesAsync();
@@ -84,8 +81,6 @@ public static class DbSeeder
 
     public static async Task EnsureMigrationsAppliedAsync(ApplicationDbContext context)
     {
-        // Always use EnsureCreatedAsync for fresh database creation
-        // This creates the schema from the model without needing migrations
         await context.Database.EnsureCreatedAsync();
     }
 }

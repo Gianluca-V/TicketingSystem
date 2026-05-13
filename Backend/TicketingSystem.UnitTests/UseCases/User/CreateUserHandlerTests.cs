@@ -5,6 +5,7 @@ using TicketingSystem.Application.Interfaces.persistence;
 using TicketingSystem.Application.Interfaces.Services;
 using TicketingSystem.Application.UseCases.User.CreateUser;
 using TicketingSystem.Domain.Entities;
+using TicketingSystem.Domain.Exceptions;
 using TicketingSystem.UnitTests.Helpers;
 using Xunit;
 using DomainUser = TicketingSystem.Domain.Entities.User;
@@ -45,6 +46,9 @@ public class CreateUserHandlerTests
             Password = "Password123"
         };
 
+        _userManagerMock.Setup(m => m.FindByEmailAsync(command.Email))
+            .ReturnsAsync((DomainUser?)null);
+
         _userManagerMock.Setup(m => m.CreateAsync(It.IsAny<DomainUser>(), It.IsAny<string>()))
             .ReturnsAsync(IdentityResult.Success)
             .Callback<DomainUser, string>((u, p) => u.Id = 1);
@@ -63,11 +67,31 @@ public class CreateUserHandlerTests
         
         _auditRepositoryMock.Verify(a => a.AddAsync(It.Is<AuditLog>(l => 
             l.Action == AuditAction.Created && 
-            l.ResourceType == "User"), It.IsAny<CancellationToken>()), Times.Once);
+            l.ResourceType == "User" &&
+            l.ResourceId == "1" &&
+            l.Details.Contains(command.Email)), It.IsAny<CancellationToken>()), Times.Once);
+
+        _cacheServiceMock.Verify(c => c.RemoveByPrefixAsync("Users:List", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task Handle_DuplicateEmail_ShouldThrowExceptionAndRollback()
+    public async Task Handle_UserAlreadyExists_ShouldThrowBusinessException()
+    {
+        // Arrange
+        var command = new CreateUserCommand { Email = "existing@example.com", Name = "Name", Password = "Password123" };
+        _userManagerMock.Setup(m => m.FindByEmailAsync(command.Email))
+            .ReturnsAsync(new DomainUser { Name = "Name" });
+
+        // Act
+        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<BusinessException>().WithMessage("User already exists");
+        _uowMock.Verify(u => u.BeginTransactionAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Handle_DuplicateEmail_ShouldThrowBusinessExceptionAndRollback()
     {
         // Arrange
         var command = new CreateUserCommand
@@ -77,6 +101,9 @@ public class CreateUserHandlerTests
             Password = "Password123"
         };
 
+        _userManagerMock.Setup(m => m.FindByEmailAsync(command.Email))
+            .ReturnsAsync((DomainUser?)null);
+
         _userManagerMock.Setup(m => m.CreateAsync(It.IsAny<DomainUser>(), It.IsAny<string>()))
             .ReturnsAsync(IdentityResult.Failed(new IdentityError { Description = "User already exists" }));
 
@@ -84,8 +111,26 @@ public class CreateUserHandlerTests
         Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await act.Should().ThrowAsync<Exception>().WithMessage("*User already exists*");
+        await act.Should().ThrowAsync<BusinessException>().WithMessage("*User creation failed*");
         _uowMock.Verify(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
-        _userManagerMock.Verify(m => m.CreateAsync(It.IsAny<DomainUser>(), It.IsAny<string>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_GenericException_ShouldThrowBusinessExceptionAndRollback()
+    {
+        // Arrange
+        var command = new CreateUserCommand { Email = "error@example.com", Name = "Name", Password = "Password123" };
+        _userManagerMock.Setup(m => m.FindByEmailAsync(command.Email))
+            .ReturnsAsync((DomainUser?)null);
+        
+        _userManagerMock.Setup(m => m.CreateAsync(It.IsAny<DomainUser>(), It.IsAny<string>()))
+            .ThrowsAsync(new Exception("Database crash"));
+
+        // Act
+        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<BusinessException>().WithMessage("An error occurred during user creation");
+        _uowMock.Verify(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }

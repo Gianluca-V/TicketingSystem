@@ -53,6 +53,24 @@ public class DeleteUserHandlerTests
         // Assert
         _userManagerMock.Verify(m => m.DeleteAsync(user), Times.Once);
         _uowMock.Verify(u => u.CommitTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _auditRepositoryMock.Verify(a => a.AddAsync(It.IsAny<AuditLog>(), It.IsAny<CancellationToken>()), Times.Once);
+        _cacheServiceMock.Verify(c => c.RemoveByPrefixAsync("Users:List", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_GenericException_ShouldRollback()
+    {
+        // Arrange
+        var command = new DeleteUserCommand { Id = 1 };
+        _userManagerMock.Setup(m => m.FindByIdAsync("1"))
+            .ThrowsAsync(new Exception("Database error"));
+
+        // Act
+        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<Exception>();
+        _uowMock.Verify(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

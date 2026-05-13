@@ -53,5 +53,41 @@ public class DeleteSectorHandlerTests
         // Assert
         _sectorRepositoryMock.Verify(r => r.DeleteAsync(1, It.IsAny<CancellationToken>()), Times.Once);
         _uowMock.Verify(u => u.CommitTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _auditRepositoryMock.Verify(a => a.AddAsync(It.IsAny<AuditLog>(), It.IsAny<CancellationToken>()), Times.Once);
+        _cacheServiceMock.Verify(c => c.RemoveAsync($"Sector:{command.Id}", It.IsAny<CancellationToken>()), Times.Once);
+        _cacheServiceMock.Verify(c => c.RemoveByPrefixAsync("Sectors:List", It.IsAny<CancellationToken>()), Times.Once);
+        _cacheServiceMock.Verify(c => c.RemoveByPrefixAsync("Seats:List", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_SectorNotFound_ShouldThrowException()
+    {
+        // Arrange
+        var command = new DeleteSectorCommand { Id = 99 };
+        _sectorRepositoryMock.Setup(r => r.GetByIdAsync(99, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TicketingSystem.Domain.Entities.Sector?)null);
+
+        // Act
+        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<Exception>().WithMessage("Sector not found");
+        _uowMock.Verify(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_GenericException_ShouldRollback()
+    {
+        // Arrange
+        var command = new DeleteSectorCommand { Id = 1 };
+        _sectorRepositoryMock.Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Database error"));
+
+        // Act
+        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<Exception>();
+        _uowMock.Verify(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }

@@ -55,27 +55,90 @@ public class CreateSeatsBulkHandlerTests
         { 
             Id = 1, 
             Name = "S1",
-            EventId = 1,
-            Event = new TicketingSystem.Domain.Entities.Event { Name = "E1" }
+            Capacity = 100,
+            Event = new TicketingSystem.Domain.Entities.Event { Name = "E1", Status = "A" }
         };
 
         _sectorRepositoryMock.Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(sector);
+        _seatRepositoryMock.Setup(r => r.CountBySectorAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(10);
+        _currentUserServiceMock.Setup(s => s.UserId).Returns(111);
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.Should().HaveCount(2);
-        _seatRepositoryMock.Verify(r => r.AddBulkAsync(It.IsAny<IEnumerable<TicketingSystem.Domain.Entities.Seat>>(), It.IsAny<CancellationToken>()), Times.Once);
+        _seatRepositoryMock.Verify(r => r.AddBulkAsync(It.Is<IEnumerable<TicketingSystem.Domain.Entities.Seat>>(s => s.Count() == 2), It.IsAny<CancellationToken>()), Times.Once);
         _uowMock.Verify(u => u.CommitTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _auditRepositoryMock.Verify(a => a.AddAsync(It.Is<AuditLog>(l => l.UserId == 111), It.IsAny<CancellationToken>()), Times.Once);
+        _cacheServiceMock.Verify(c => c.RemoveByPrefixAsync("Seats:List", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_EmptySeats_ShouldThrowBusinessException()
+    {
+        // Arrange
+        var command = new CreateSeatsBulkCommand { SectorId = 1, Seats = new List<SeatItem>() };
+
+        // Act
+        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<TicketingSystem.Domain.Exceptions.BusinessException>().WithMessage("Seat list cannot be empty.");
+    }
+
+    [Fact]
+    public async Task Handle_InvalidSeatNumber_ShouldThrowBusinessException()
+    {
+        // Arrange
+        var command = new CreateSeatsBulkCommand 
+        { 
+            SectorId = 1, 
+            Seats = new List<SeatItem> { new SeatItem { SeatNumber = "" } } 
+        };
+
+        // Act
+        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<TicketingSystem.Domain.Exceptions.BusinessException>().WithMessage("All seats must have a valid number.");
+    }
+
+    [Fact]
+    public async Task Handle_CapacityExceeded_ShouldThrowBusinessException()
+    {
+        // Arrange
+        var command = new CreateSeatsBulkCommand 
+        { 
+            SectorId = 1, 
+            Seats = new List<SeatItem> { new SeatItem { SeatNumber = "A1" } } 
+        };
+        var sector = new TicketingSystem.Domain.Entities.Sector { Id = 1, Name = "S1", Capacity = 10, Event = new TicketingSystem.Domain.Entities.Event { Name = "E1", Status = "A" } };
+
+        _sectorRepositoryMock.Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(sector);
+        _seatRepositoryMock.Setup(r => r.CountBySectorAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(10); // Sector is already full
+
+        // Act
+        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<TicketingSystem.Domain.Exceptions.BusinessException>().WithMessage("*capacity*");
+        _uowMock.Verify(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task Handle_SectorNotFound_ShouldThrowException()
     {
         // Arrange
-        var command = new CreateSeatsBulkCommand { SectorId = 99 };
+        var command = new CreateSeatsBulkCommand 
+        { 
+            SectorId = 99,
+            Seats = new List<SeatItem> { new SeatItem { SeatNumber = "A1" } }
+        };
         _sectorRepositoryMock.Setup(r => r.GetByIdAsync(99, It.IsAny<CancellationToken>()))
             .ReturnsAsync((TicketingSystem.Domain.Entities.Sector?)null);
 
@@ -84,6 +147,29 @@ public class CreateSeatsBulkHandlerTests
 
         // Assert
         await act.Should().ThrowAsync<Exception>().WithMessage("Sector not found");
+        _uowMock.Verify(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_GenericException_ShouldRollback()
+    {
+        // Arrange
+        var command = new CreateSeatsBulkCommand 
+        { 
+            SectorId = 1, 
+            Seats = new List<SeatItem> { new SeatItem { SeatNumber = "A1" } } 
+        };
+        var sector = new TicketingSystem.Domain.Entities.Sector { Id = 1, Name = "S1", Event = new TicketingSystem.Domain.Entities.Event { Name = "E1", Status = "A" } };
+        _sectorRepositoryMock.Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(sector);
+        _seatRepositoryMock.Setup(r => r.AddBulkAsync(It.IsAny<IEnumerable<TicketingSystem.Domain.Entities.Seat>>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Database error"));
+
+        // Act
+        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<Exception>();
         _uowMock.Verify(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }

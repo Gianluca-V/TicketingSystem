@@ -43,7 +43,8 @@ public class CreateSeatHandlerTests
         var sector = new TicketingSystem.Domain.Entities.Sector 
         { 
             Id = 1, 
-            Name = "S1", 
+            Name = "S1",
+            Capacity = 100,
             Event = new TicketingSystem.Domain.Entities.Event { Name = "E1", Status = "A" } 
         };
 

@@ -4,6 +4,7 @@ using TicketingSystem.Application.Interfaces.persistence;
 using TicketingSystem.Application.Interfaces.Services;
 using TicketingSystem.Application.UseCases.Sector.CreateSector;
 using TicketingSystem.Domain.Entities;
+using TicketingSystem.Domain.Exceptions;
 using Xunit;
 
 namespace TicketingSystem.UnitTests.UseCases.Sector;
@@ -49,14 +50,38 @@ public class CreateSectorHandlerTests
 
         // Assert
         result.Should().BeGreaterThanOrEqualTo(0);
-        _sectorRepositoryMock.Verify(r => r.AddAsync(It.IsAny<TicketingSystem.Domain.Entities.Sector>(), It.IsAny<CancellationToken>()), Times.Once);
+        _sectorRepositoryMock.Verify(r => r.AddAsync(It.Is<TicketingSystem.Domain.Entities.Sector>(s => 
+            s.Name == command.Name && 
+            s.Capacity == command.Capacity && 
+            s.Price == command.Price), It.IsAny<CancellationToken>()), Times.Once);
+        
+        _uowMock.Verify(u => u.CommitTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _auditRepositoryMock.Verify(a => a.AddAsync(It.IsAny<AuditLog>(), It.IsAny<CancellationToken>()), Times.Once);
+        _cacheServiceMock.Verify(c => c.RemoveByPrefixAsync("Sectors:List", It.IsAny<CancellationToken>()), Times.Once);
+        _cacheServiceMock.Verify(c => c.RemoveByPrefixAsync("Seats:List", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Theory]
+    [InlineData("", 100, 50, "Sector name cannot be empty.")]
+    [InlineData("VIP", 100, -1, "Sector price cannot be negative.")]
+    [InlineData("VIP", 0, 50, "Sector capacity must be greater than zero.")]
+    public async Task Handle_InvalidInput_ShouldThrowBusinessException(string name, int capacity, decimal price, string expectedMessage)
+    {
+        // Arrange
+        var command = new CreateSectorCommand { EventId = 1, Name = name, Capacity = capacity, Price = price };
+
+        // Act
+        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<BusinessException>().WithMessage(expectedMessage);
     }
 
     [Fact]
     public async Task Handle_EventNotFound_ShouldThrowException()
     {
         // Arrange
-        var command = new CreateSectorCommand { EventId = 99, Name = "VIP" };
+        var command = new CreateSectorCommand { EventId = 99, Name = "VIP", Capacity = 100, Price = 50 };
         _eventRepositoryMock.Setup(r => r.GetByIdAsync(99, It.IsAny<CancellationToken>()))
             .ReturnsAsync((TicketingSystem.Domain.Entities.Event?)null);
 
@@ -65,5 +90,25 @@ public class CreateSectorHandlerTests
 
         // Assert
         await act.Should().ThrowAsync<Exception>().WithMessage("Event not found");
+        _uowMock.Verify(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_GenericException_ShouldRollback()
+    {
+        // Arrange
+        var command = new CreateSectorCommand { EventId = 1, Name = "VIP", Capacity = 100, Price = 50 };
+        var @event = new TicketingSystem.Domain.Entities.Event { Id = 1, Name = "E1", Status = "A" };
+        _eventRepositoryMock.Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(@event);
+        _sectorRepositoryMock.Setup(r => r.AddAsync(It.IsAny<TicketingSystem.Domain.Entities.Sector>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Database error"));
+
+        // Act
+        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<Exception>();
+        _uowMock.Verify(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }

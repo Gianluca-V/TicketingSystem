@@ -4,6 +4,7 @@ using TicketingSystem.Application.Interfaces.persistence;
 using TicketingSystem.Application.Interfaces.Services;
 using TicketingSystem.Application.UseCases.Seat.UpdateSeat;
 using TicketingSystem.Domain.Entities;
+using TicketingSystem.UnitTests.Helpers;
 using Xunit;
 
 namespace TicketingSystem.UnitTests.UseCases.Seat;
@@ -12,6 +13,7 @@ public class UpdateSeatHandlerTests
 {
     private readonly Mock<ISeatRepository> _seatRepositoryMock;
     private readonly Mock<IAuditRepository> _auditRepositoryMock;
+    private readonly Mock<ICacheService> _cacheServiceMock;
     private readonly Mock<IUnitOfWork> _uowMock;
     private readonly UpdateSeatHandler _handler;
 
@@ -19,11 +21,13 @@ public class UpdateSeatHandlerTests
     {
         _seatRepositoryMock = new Mock<ISeatRepository>();
         _auditRepositoryMock = new Mock<IAuditRepository>();
-        _uowMock = new Mock<IUnitOfWork>();
+        _cacheServiceMock = MockHelpers.MockCacheService();
+        _uowMock = MockHelpers.MockUnitOfWork();
 
         _handler = new UpdateSeatHandler(
             _seatRepositoryMock.Object,
             _auditRepositoryMock.Object,
+            _cacheServiceMock.Object,
             _uowMock.Object
         );
     }
@@ -33,7 +37,7 @@ public class UpdateSeatHandlerTests
     {
         // Arrange
         var command = new UpdateSeatCommand { Id = 1, SeatNumber = "B2" };
-        var seat = new TicketingSystem.Domain.Entities.Seat { Id = 1, SeatNumber = "A1" };
+        var seat = new TicketingSystem.Domain.Entities.Seat { Id = 1, SeatNumber = "A1", Status = SeatStatus.Available };
 
         _seatRepositoryMock.Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(seat);

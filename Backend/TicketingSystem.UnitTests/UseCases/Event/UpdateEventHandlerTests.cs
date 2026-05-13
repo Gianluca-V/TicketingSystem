@@ -39,37 +39,39 @@ public class UpdateEventHandlerTests
     public async Task Handle_ValidCommand_ShouldUpdateEvent()
     {
         // Arrange
-        var command = new UpdateEventCommand { Id = 1, Name = "Updated Festival" };
-        var @event = new TicketingSystem.Domain.Entities.Event { Id = 1, Name = "Old Festival" };
+        var command = new UpdateEventCommand 
+        { 
+            Id = 1, 
+            Name = "Updated Festival",
+            Date = DateTime.Now,
+            Venue = "New Venue",
+            Status = "Inactive"
+        };
+        var @event = new TicketingSystem.Domain.Entities.Event { Id = 1, Name = "Old Festival", Status = "A" };
 
         _eventRepositoryMock.Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(@event);
+        _currentUserServiceMock.Setup(s => s.UserId).Returns(456);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);
 
         // Assert
         @event.Name.Should().Be("Updated Festival");
+        @event.EventDate.Kind.Should().Be(DateTimeKind.Utc);
+        @event.Venue.Should().Be("New Venue");
+        @event.Status.Should().Be("Inactive");
+        
         _eventRepositoryMock.Verify(r => r.UpdateAsync(@event, It.IsAny<CancellationToken>()), Times.Once);
-    }
+        _uowMock.Verify(u => u.CommitTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+        
+        _auditRepositoryMock.Verify(a => a.AddAsync(It.Is<AuditLog>(l => 
+            l.Action == AuditAction.Updated && 
+            l.UserId == 456), It.IsAny<CancellationToken>()), Times.Once);
 
-    [Fact]
-    public async Task Handle_UpdateEventDate_ShouldUpdateEventDate()
-    {
-        // Arrange
-        var newDate = DateTime.Now.AddDays(10);
-        var command = new UpdateEventCommand { Id = 1, Date = newDate };
-        var @event = new TicketingSystem.Domain.Entities.Event { Id = 1, Name = "Festival", EventDate = DateTime.Now };
-
-        _eventRepositoryMock.Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(@event);
-
-        // Act
-        await _handler.Handle(command, CancellationToken.None);
-
-        // Assert
-        @event.EventDate.Should().Be(newDate);
-        _eventRepositoryMock.Verify(r => r.UpdateAsync(@event, It.IsAny<CancellationToken>()), Times.Once);
+        _cacheServiceMock.Verify(c => c.RemoveAsync($"Event:{command.Id}", It.IsAny<CancellationToken>()), Times.Once);
+        _cacheServiceMock.Verify(c => c.RemoveByPrefixAsync("Events:List", It.IsAny<CancellationToken>()), Times.Once);
+        _cacheServiceMock.Verify(c => c.RemoveByPrefixAsync("AuditLogs:List", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -85,5 +87,25 @@ public class UpdateEventHandlerTests
 
         // Assert
         await act.Should().ThrowAsync<Exception>().WithMessage("Event not found");
+        _uowMock.Verify(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_GenericException_ShouldRollback()
+    {
+        // Arrange
+        var command = new UpdateEventCommand { Id = 1, Name = "Error" };
+        var @event = new TicketingSystem.Domain.Entities.Event { Id = 1, Name = "E1", Status = "A" };
+        _eventRepositoryMock.Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(@event);
+        _eventRepositoryMock.Setup(r => r.UpdateAsync(It.IsAny<TicketingSystem.Domain.Entities.Event>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Database error"));
+
+        // Act
+        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<Exception>();
+        _uowMock.Verify(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }

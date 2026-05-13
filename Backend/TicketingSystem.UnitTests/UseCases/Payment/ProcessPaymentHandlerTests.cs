@@ -5,6 +5,7 @@ using TicketingSystem.Application.Interfaces.persistence;
 using TicketingSystem.Application.Interfaces.Services;
 using TicketingSystem.Application.UseCases.Payment;
 using TicketingSystem.Domain.Entities;
+using TicketingSystem.Domain.Exceptions;
 using TicketingSystem.UnitTests.Helpers;
 using Xunit;
 
@@ -50,7 +51,12 @@ public class ProcessPaymentHandlerTests
             ReservedAt = DateTime.UtcNow,
             ExpiresAt = DateTime.UtcNow.AddMinutes(10)
         };
-        var seat = new TicketingSystem.Domain.Entities.Seat { Id = 1, SeatNumber = "A1", Status = SeatStatus.Reserved };
+        var seat = new TicketingSystem.Domain.Entities.Seat 
+        { 
+            Id = 1, 
+            SeatNumber = "A1", 
+            Status = SeatStatus.Reserved
+        };
 
         _reservationRepositoryMock.Setup(r => r.GetByIdAsync(reservationId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(reservation);
@@ -65,10 +71,51 @@ public class ProcessPaymentHandlerTests
         seat.Status.Should().Be(SeatStatus.Sold);
         reservation.PaidAt.Should().NotBeNull();
         _uowMock.Verify(u => u.CommitTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _auditRepositoryMock.Verify(a => a.AddAsync(It.IsAny<AuditLog>(), It.IsAny<CancellationToken>()), Times.Once);
+        _cacheServiceMock.Verify(c => c.RemoveByPrefixAsync("Reservations:List", It.IsAny<CancellationToken>()), Times.Once);
+        _cacheServiceMock.Verify(c => c.RemoveByPrefixAsync("AuditLogs:List", It.IsAny<CancellationToken>()), Times.Once);
+        _cacheServiceMock.Verify(c => c.RemoveByPrefixAsync("Seats:List", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task Handle_ExpiredReservation_ShouldThrowException()
+    public async Task Handle_ReservationNotFound_ShouldThrowKeyNotFoundException()
+    {
+        // Arrange
+        var reservationId = Guid.NewGuid();
+        var command = new ProcessPaymentCommand(reservationId, "TX123");
+        _reservationRepositoryMock.Setup(r => r.GetByIdAsync(reservationId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TicketingSystem.Domain.Entities.Reservation?)null);
+
+        // Act
+        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<KeyNotFoundException>();
+    }
+
+    [Fact]
+    public async Task Handle_AlreadyPaid_ShouldThrowConflictException()
+    {
+        // Arrange
+        var reservationId = Guid.NewGuid();
+        var command = new ProcessPaymentCommand(reservationId, "TX123");
+        var reservation = new TicketingSystem.Domain.Entities.Reservation 
+        { 
+            Id = reservationId, 
+            PaidAt = DateTime.UtcNow
+        };
+        _reservationRepositoryMock.Setup(r => r.GetByIdAsync(reservationId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(reservation);
+
+        // Act
+        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<ConflictException>().WithMessage("*already paid*");
+    }
+
+    [Fact]
+    public async Task Handle_ExpiredReservation_ShouldThrowConflictException()
     {
         // Arrange
         var reservationId = Guid.NewGuid();
@@ -86,6 +133,46 @@ public class ProcessPaymentHandlerTests
         Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await act.Should().ThrowAsync<Exception>().WithMessage($"Reservation {reservationId} has expired");
+        await act.Should().ThrowAsync<ConflictException>().WithMessage($"Reservation {reservationId} has expired");
+    }
+
+    [Fact]
+    public async Task Handle_SeatNotFound_ShouldThrowKeyNotFoundExceptionAndRollback()
+    {
+        // Arrange
+        var reservationId = Guid.NewGuid();
+        var command = new ProcessPaymentCommand(reservationId, "TX123");
+        var reservation = new TicketingSystem.Domain.Entities.Reservation { Id = reservationId, SeatId = 99 };
+        _reservationRepositoryMock.Setup(r => r.GetByIdAsync(reservationId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(reservation);
+        _seatRepositoryMock.Setup(r => r.GetByIdAsync(99, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TicketingSystem.Domain.Entities.Seat?)null);
+
+        // Act
+        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<KeyNotFoundException>();
+        _uowMock.Verify(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_GenericException_ShouldRollback()
+    {
+        // Arrange
+        var reservationId = Guid.NewGuid();
+        var command = new ProcessPaymentCommand(reservationId, "TX123");
+        var reservation = new TicketingSystem.Domain.Entities.Reservation { Id = reservationId, SeatId = 1 };
+        _reservationRepositoryMock.Setup(r => r.GetByIdAsync(reservationId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(reservation);
+        _seatRepositoryMock.Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Database error"));
+
+        // Act
+        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<Exception>();
+        _uowMock.Verify(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }

@@ -25,7 +25,27 @@ public class GetSectorsHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenSectorsExist_ShouldReturnDtos()
+    public async Task Handle_WhenCacheExists_ShouldReturnCachedSectors()
+    {
+        // Arrange
+        var cachedSectors = new List<SectorDto>
+        {
+            new(1, 1, "E1", "S1", 50, 100)
+        };
+
+        _cacheServiceMock.Setup(c => c.GetAsync<IEnumerable<SectorDto>>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(cachedSectors);
+
+        // Act
+        var result = await _handler.Handle(new GetSectorsQuery(), CancellationToken.None);
+
+        // Assert
+        result.Should().BeEquivalentTo(cachedSectors);
+        _sectorRepositoryMock.Verify(r => r.GetAllAsync(It.IsAny<SectorFilter>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Handle_WhenCacheMiss_ShouldFetchFromRepositoryAndCache()
     {
         // Arrange
         var sectors = new List<TicketingSystem.Domain.Entities.Sector>
@@ -44,6 +64,28 @@ public class GetSectorsHandlerTests
 
         // Assert
         result.Should().HaveCount(1);
-        result.First().Name.Should().Be("S1");
+        _cacheServiceMock.Verify(c => c.SetAsync(It.IsAny<string>(), It.IsAny<IEnumerable<SectorDto>>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_WithNullEvent_ShouldReturnUnknownEventName()
+    {
+        // Arrange
+        var sectors = new List<TicketingSystem.Domain.Entities.Sector>
+        {
+            new() { Id = 1, Name = "S1", Event = null }
+        };
+
+        _cacheServiceMock.Setup(c => c.GetAsync<IEnumerable<SectorDto>>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IEnumerable<SectorDto>?)null);
+
+        _sectorRepositoryMock.Setup(r => r.GetAllAsync(It.IsAny<SectorFilter>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(sectors);
+
+        // Act
+        var result = await _handler.Handle(new GetSectorsQuery(), CancellationToken.None);
+
+        // Assert
+        result.First().EventName.Should().Be("Unknown");
     }
 }

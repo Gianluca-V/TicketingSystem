@@ -25,13 +25,33 @@ public class GetEventsHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenEventsExist_ShouldReturnEventDtos()
+    public async Task Handle_WhenCacheExists_ShouldReturnCachedEvents()
+    {
+        // Arrange
+        var cachedEvents = new List<EventDto>
+        {
+            new(1, "E1", DateTime.UtcNow, "V1", 0),
+            new(2, "E2", DateTime.UtcNow, "V2", 0)
+        };
+
+        _cacheServiceMock.Setup(c => c.GetAsync<IEnumerable<EventDto>>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(cachedEvents);
+
+        // Act
+        var result = await _handler.Handle(new GetEventsQuery(), CancellationToken.None);
+
+        // Assert
+        result.Should().BeEquivalentTo(cachedEvents);
+        _eventRepositoryMock.Verify(r => r.GetAllAsync(It.IsAny<EventFilter>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Handle_WhenCacheMiss_ShouldFetchFromRepositoryAndCache()
     {
         // Arrange
         var events = new List<TicketingSystem.Domain.Entities.Event>
         {
-            new() { Id = 1, Name = "E1", Venue = "V1", Status = "A" },
-            new() { Id = 2, Name = "E2", Venue = "V2", Status = "A" }
+            new() { Id = 1, Name = "E1", Venue = "V1", Status = "A" }
         };
 
         _cacheServiceMock.Setup(c => c.GetAsync<IEnumerable<EventDto>>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -44,7 +64,7 @@ public class GetEventsHandlerTests
         var result = await _handler.Handle(new GetEventsQuery(), CancellationToken.None);
 
         // Assert
-        result.Should().HaveCount(2);
-        result.First().Name.Should().Be("E1");
+        result.Should().HaveCount(1);
+        _cacheServiceMock.Verify(c => c.SetAsync(It.IsAny<string>(), It.IsAny<IEnumerable<EventDto>>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 }

@@ -25,13 +25,33 @@ public class GetUsersHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenUsersExist_ShouldReturnUserDtos()
+    public async Task Handle_WhenCacheExists_ShouldReturnCachedUsers()
+    {
+        // Arrange
+        var cachedUsers = new List<UserDto>
+        {
+            new(1, "User 1", "u1@e.com"),
+            new(2, "User 2", "u2@e.com")
+        };
+
+        _cacheServiceMock.Setup(c => c.GetAsync<IEnumerable<UserDto>>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(cachedUsers);
+
+        // Act
+        var result = await _handler.Handle(new GetUsersQuery(), CancellationToken.None);
+
+        // Assert
+        result.Should().BeEquivalentTo(cachedUsers);
+        _userRepositoryMock.Verify(r => r.GetAllAsync(It.IsAny<UserFilter>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Handle_WhenCacheMiss_ShouldFetchFromRepositoryAndCache()
     {
         // Arrange
         var users = new List<TicketingSystem.Domain.Entities.User>
         {
-            new() { Id = 1, Name = "User 1", Email = "u1@e.com", PasswordHash = "h" },
-            new() { Id = 2, Name = "User 2", Email = "u2@e.com", PasswordHash = "h" }
+            new() { Id = 1, Name = "User 1", Email = "u1@e.com", PasswordHash = "h" }
         };
 
         _cacheServiceMock.Setup(c => c.GetAsync<IEnumerable<UserDto>>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -44,7 +64,7 @@ public class GetUsersHandlerTests
         var result = await _handler.Handle(new GetUsersQuery(), CancellationToken.None);
 
         // Assert
-        result.Should().HaveCount(2);
-        result.First().Name.Should().Be("User 1");
+        result.Should().HaveCount(1);
+        _cacheServiceMock.Verify(c => c.SetAsync(It.IsAny<string>(), It.IsAny<IEnumerable<UserDto>>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 }

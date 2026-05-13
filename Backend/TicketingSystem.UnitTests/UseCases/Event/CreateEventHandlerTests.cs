@@ -42,17 +42,45 @@ public class CreateEventHandlerTests
         var command = new CreateEventCommand
         {
             Name = "Festival",
-            Date = DateTime.UtcNow,
+            Date = DateTime.Now, // Local time
             Venue = "Stadium",
             Status = "Active"
         };
+
+        _currentUserServiceMock.Setup(s => s.UserId).Returns(123);
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        result.Should().BeGreaterThanOrEqualTo(0);
-        _eventRepositoryMock.Verify(r => r.AddAsync(It.IsAny<TicketingSystem.Domain.Entities.Event>(), It.IsAny<CancellationToken>()), Times.Once);
+        _eventRepositoryMock.Verify(r => r.AddAsync(It.Is<TicketingSystem.Domain.Entities.Event>(e => 
+            e.Name == command.Name && 
+            e.EventDate.Kind == DateTimeKind.Utc &&
+            e.Venue == command.Venue &&
+            e.Status == command.Status), It.IsAny<CancellationToken>()), Times.Once);
+        
         _uowMock.Verify(u => u.CommitTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _auditRepositoryMock.Verify(a => a.AddAsync(It.Is<AuditLog>(l => 
+            l.Action == AuditAction.Created && 
+            l.UserId == 123), It.IsAny<CancellationToken>()), Times.Once);
+        
+        _cacheServiceMock.Verify(c => c.RemoveByPrefixAsync("Events:List", It.IsAny<CancellationToken>()), Times.Once);
+        _cacheServiceMock.Verify(c => c.RemoveByPrefixAsync("AuditLogs:List", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_GenericException_ShouldRollback()
+    {
+        // Arrange
+        var command = new CreateEventCommand { Name = "Error" };
+        _eventRepositoryMock.Setup(r => r.AddAsync(It.IsAny<TicketingSystem.Domain.Entities.Event>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Database error"));
+
+        // Act
+        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<Exception>();
+        _uowMock.Verify(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }

@@ -55,6 +55,54 @@ public class ReserveSeatHandlerTests
         seat.Status.Should().Be(SeatStatus.Reserved);
         _reservationRepositoryMock.Verify(r => r.AddAsync(It.IsAny<TicketingSystem.Domain.Entities.Reservation>(), It.IsAny<CancellationToken>()), Times.Once);
         _uowMock.Verify(u => u.CommitTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+        
+        _auditRepositoryMock.Verify(a => a.AddAsync(It.Is<AuditLog>(l => 
+            l.Action == AuditAction.Reserved && 
+            l.UserId == 10), It.IsAny<CancellationToken>()), Times.Once);
+
+        _cacheServiceMock.Verify(c => c.RemoveByPrefixAsync("Reservations:List", It.IsAny<CancellationToken>()), Times.Once);
+        _cacheServiceMock.Verify(c => c.RemoveByPrefixAsync("AuditLogs:List", It.IsAny<CancellationToken>()), Times.Once);
+        _cacheServiceMock.Verify(c => c.RemoveByPrefixAsync("Seats:List", It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_ConcurrencyConflict_ShouldAuditAndThrowConflictException()
+    {
+        // Arrange
+        var command = new ReserveSeatCommand(1, 10);
+        var seat = new TicketingSystem.Domain.Entities.Seat { Id = 1, SeatNumber = "A1", Status = SeatStatus.Available };
+
+        _seatRepositoryMock.Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(seat);
+        
+        _seatRepositoryMock.Setup(r => r.UpdateAsync(It.IsAny<TicketingSystem.Domain.Entities.Seat>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new DbUpdateConcurrencyException());
+
+        // Act
+        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<ConflictException>().WithMessage("Seat already taken");
+        _uowMock.Verify(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _auditRepositoryMock.Verify(a => a.AddAsync(It.Is<AuditLog>(l => 
+            l.Action == AuditAction.ConflictAttempt && 
+            l.ResourceId == "1"), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_GenericException_ShouldRollback()
+    {
+        // Arrange
+        var command = new ReserveSeatCommand(1, 10);
+        _seatRepositoryMock.Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Database error"));
+
+        // Act
+        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<Exception>();
+        _uowMock.Verify(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -70,6 +118,7 @@ public class ReserveSeatHandlerTests
 
         // Assert
         await act.Should().ThrowAsync<KeyNotFoundException>().WithMessage("Seat not found");
+        _uowMock.Verify(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -87,27 +136,6 @@ public class ReserveSeatHandlerTests
 
         // Assert
         await act.Should().ThrowAsync<ConflictException>().WithMessage("Seat not available");
-        _uowMock.Verify(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task Handle_ConcurrencyConflict_ShouldThrowConflictException()
-    {
-        // Arrange
-        var command = new ReserveSeatCommand(1, 10);
-        var seat = new TicketingSystem.Domain.Entities.Seat { Id = 1, SeatNumber = "A1", Status = SeatStatus.Available };
-
-        _seatRepositoryMock.Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(seat);
-        
-        _seatRepositoryMock.Setup(r => r.UpdateAsync(It.IsAny<TicketingSystem.Domain.Entities.Seat>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new DbUpdateConcurrencyException());
-
-        // Act
-        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
-
-        // Assert
-        await act.Should().ThrowAsync<ConflictException>().WithMessage("Seat already taken");
         _uowMock.Verify(u => u.RollbackTransactionAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }

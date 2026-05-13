@@ -25,6 +25,53 @@ public class GetSeatByIdHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenCacheExists_ShouldReturnCachedSeat()
+    {
+        // Arrange
+        var cachedSeat = new SeatDto(10, "A1", 5, "S1", 1500, "Available");
+        var query = new GetSeatByIdQuery { SeatId = 10, SectorId = 5 };
+
+        _cacheServiceMock.Setup(c => c.GetAsync<SeatDto>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(cachedSeat);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.Should().BeEquivalentTo(cachedSeat);
+        _seatRepositoryMock.Verify(r => r.GetByIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Handle_WhenCacheMiss_ShouldFetchAndCache()
+    {
+        // Arrange
+        var seat = new TicketingSystem.Domain.Entities.Seat
+        {
+            Id = 10,
+            SeatNumber = "A1",
+            SectorId = 5,
+            Price = 1500,
+            Status = SeatStatus.Available
+        };
+
+        _cacheServiceMock.Setup(c => c.GetAsync<SeatDto>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((SeatDto?)null);
+
+        _seatRepositoryMock.Setup(r => r.GetByIdAsync(10, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(seat);
+
+        var query = new GetSeatByIdQuery { SeatId = 10, SectorId = 5 };
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.Should().NotBeNull();
+        _cacheServiceMock.Verify(c => c.SetAsync(It.IsAny<string>(), It.IsAny<SeatDto>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task Handle_WhenSeatExistsAndBelongsToSector_ShouldReturnDto()
     {
         // Arrange

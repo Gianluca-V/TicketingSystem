@@ -33,6 +33,12 @@
           font-family="Syne, sans-serif" font-size="9.5" font-weight="700" letter-spacing="3"
           class="no-ptr"
         >{{ vipSector.name.toUpperCase() }}</text>
+        <text x="250" y="128"
+          text-anchor="middle"
+          :fill="priceFill('vip')"
+          font-size="7.5" font-family="DM Mono, monospace"
+          class="no-ptr"
+        >${{ vipSector.price?.toLocaleString('es-AR') }}</text>
       </g>
 
       <!-- Campo — single unified central area -->

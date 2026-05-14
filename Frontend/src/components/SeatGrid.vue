@@ -1,9 +1,11 @@
 <template>
   <div class="seat-grid-wrapper">
-    <!-- Legend -->
     <div class="legend">
       <div class="legend-item">
         <span class="seat-dot available"></span> Disponible
+      </div>
+      <div class="legend-item">
+        <span class="seat-dot owned"></span> Reservado por vos
       </div>
       <div class="legend-item">
         <span class="seat-dot reserved"></span> Reservado
@@ -16,12 +18,6 @@
       </div>
     </div>
 
-    <!-- Stage indicator -->
-    <div class="stage-bar">
-      <span>ESCENARIO</span>
-    </div>
-
-    <!-- Grid -->
     <div v-if="seats.length" class="seat-grid">
       <button
         v-for="seat in seats"
@@ -44,6 +40,8 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+
 const props = defineProps({
   seats:          { type: Array,  required: true },
   selected:       { type: Object, default: null },
@@ -52,28 +50,30 @@ const props = defineProps({
 
 defineEmits(['select'])
 
+const myReservationSet = computed(() => new Set(props.myReservations))
+
 function getSeatClass(seat) {
   const base = seat.status?.toLowerCase() ?? 'available'
   const isSelected = props.selected && seat.id === props.selected.id
-  const isMine = props.myReservations.includes(seat.id)
+  const isMine = myReservationSet.value.has(seat.id)
 
   return {
     available: base === 'available',
     reserved:  base === 'reserved',
     sold:      base === 'sold' || base === 'confirmed',
-    'selected-seat': isSelected || (base === 'reserved' && isMine),
+    'owned-reservation': base === 'reserved' && isMine,
+    'selected-seat': isSelected,
   }
 }
 
 function isSelectable(seat) {
   const status = seat.status?.toLowerCase()
   if (status === 'available') return true
-  if (status === 'reserved' && props.myReservations.includes(seat.id)) return true
+  if (status === 'reserved' && myReservationSet.value.has(seat.id)) return true
   return false
 }
 
 function shortLabel(name) {
-  // Show last segment: "VIP-12" → "12", "A-5" → "5"
   const parts = name?.split('-') ?? []
   return parts.at(-1) ?? name ?? '?'
 }
@@ -97,23 +97,10 @@ function shortLabel(name) {
   flex-shrink: 0;
 }
 .seat-dot.available { background: var(--c-surface-3); border: 1px solid var(--c-gold-dim); }
+.seat-dot.owned     { background: rgba(61,139,94,.16); border: 1px solid var(--c-green); }
 .seat-dot.reserved  { background: var(--c-amber-bg); border: 1px solid var(--c-amber); }
 .seat-dot.sold      { background: var(--c-border); border: 1px solid var(--c-border); }
 .seat-dot.selected  { background: var(--c-gold); border: 1px solid var(--c-gold-light); }
-
-.stage-bar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 36px;
-  background: linear-gradient(90deg, transparent, rgba(201,168,76,.08), transparent);
-  border-top: 2px solid var(--c-gold-dim);
-  font-size: .7rem;
-  letter-spacing: .18em;
-  color: var(--c-gold-dim);
-  text-transform: uppercase;
-  font-weight: 700;
-}
 
 .seat-grid {
   display: grid;
@@ -168,6 +155,31 @@ function shortLabel(name) {
   position: absolute;
   font-size: 1.2rem;
   color: var(--c-text-3);
+}
+
+.seat.owned-reservation {
+  background: rgba(61,139,94,.16);
+  border: 1px solid var(--c-green);
+  color: #76d19d;
+  cursor: pointer;
+  opacity: 1;
+}
+.seat.owned-reservation::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(118,209,157,.24);
+  border-radius: 4px;
+  pointer-events: none;
+}
+.seat.owned-reservation:hover {
+  background: rgba(61,139,94,.24);
+  transform: scale(1.06);
+}
+
+.seat:focus-visible {
+  outline: 2px solid var(--c-gold-light);
+  outline-offset: 2px;
 }
 
 .seat-num {
